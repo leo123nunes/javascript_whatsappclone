@@ -1,7 +1,14 @@
+:root{
+    --defaultBackgroundWidthSize: 1354px;
+    --defaultBackgroundHeightSize: 720px;
+    --defaultMainScreenWidthSize: 1084px ;
+    --defaultMarinScreenHeightSize: 720px;
+}
+
 html{
     width: 100%;
     height: 100%;
-    min-width: 920px;
+    /* min-width: 920px; */
 }
 
 body{
@@ -14,17 +21,20 @@ body{
 .app{
     width: 100%;
     height: 100%;
+    /* min-width: inherit; */
 }
 
 .background{
     position: absolute;
+    min-width: var(--defaultBackgroundWidthSize);
+    min-height: var(--defaultBackgroundHeightSize);
     width: 100%;
     height: 100%;
     z-index: 0;
 }
 
 .mainScreen{
-    position: fixed;
+    position: absolute;
     background-color: rgb(235, 235, 235);
     top: 5%;
     bottom: 5%;
@@ -33,16 +43,18 @@ body{
     width: 80%;
     height: 90%;
     z-index: 1;
+    min-width: var(--defaultMainScreenWidthSize);
+    min-height: 680px;
 }
 
 .background > .background-top{
     width: 100%;
-    height: 20vh;
-    background-color: rgb(1, 141, 118);
+    height: 20%;
+    background-color: rgba(0, 122, 104, 0.513);
 }
 
 .background > .background-bottom{
     width: 100%;
-    height: 80vh;
+    height: 80%;
     background-color: rgb(204, 204, 204);
 }

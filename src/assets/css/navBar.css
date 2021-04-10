@@ -1,0 +1,21 @@
+.mainScreen .navBar .header{
+    width: 100%;
+    height: 10%;
+}
+
+.mainScreen .navBar .atts{
+    width: 100%;
+}
+
+.mainScreen .navBar .searchConversation{
+    width: 100%;
+}
+
+.mainScreen .navBar .conversations{
+    width: 100%;
+}
+
+.navBar{
+    background-color: rgb(235, 235, 235);
+    grid-area: navbar;
+}

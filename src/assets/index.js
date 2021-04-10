@@ -1,1 +1,2 @@
-import './css/background.css'
+import './css/mainScreen.css'
+import './css/app.css'

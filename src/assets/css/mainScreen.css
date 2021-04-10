@@ -1,0 +1,7 @@
+.mainScreen{
+    background-color: rgb(223, 223, 223);
+    width: 960px;
+    height: 540px;
+    min-width: 960px;
+    min-height: 540px;
+}

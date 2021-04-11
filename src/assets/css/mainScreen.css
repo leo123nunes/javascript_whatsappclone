@@ -5,15 +5,11 @@
     height: 540px;
     min-width: 960px;
     min-height: 540px;
-    grid-template-columns: 280px 1fr;
+    grid-template-columns: 350px 1fr;
     grid-template-rows: 450px 1fr;
     grid-template-areas: 
     "navbar chatmessages"
     "navbar typemessages";
-}
-
-.main-screen > *{
-    border: 1px solid rgb(228, 228, 228);
 }
 
 

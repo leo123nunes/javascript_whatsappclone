@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-
     <div class="app">
         <div class="main-screen">
             <div class="nav-bar">
@@ -39,24 +38,26 @@
                         </span>
                     </button>
                 </div> 
-                
-                <input class="search-conversation" placeholder="Search of start a new conversation">
-
+                <div class="form-group input-group search-conversation m-0">
+                   <div class="input-group-addon">
+                       <button class="btn">
+                            <i class="fas fa-search"></i>
+                       </button>
+                    <input class="type-area" placeholder="Search or start a new conversation...">
+                   </div>
+                </div>
                 <div class="conversations">
                     Conversations
                 </div>
             </div>
-
             <div class="chat-messages">
 
             </div>
-
             <div class="type-messages">
 
             </div>
         </div>
     </div>
-
     <script src="./app.js"></script>
 </body>
 </html>

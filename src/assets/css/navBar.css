@@ -12,16 +12,46 @@
 
 .main-screen .nav-bar .header .user-avatar{
     display: flex;
-    /* justify-self: flex-start; */
 }
 
 
 .main-screen .nav-bar .search-conversation{
     display: flex;
-    justify-content: center;
-    align-items: center;
+    flex-direction: row;
     width: 100%;
-    height: 5%;
+    height: 10%;
+}
+
+
+.main-screen .nav-bar .search-conversation div .type-area,
+.main-screen .nav-bar .search-conversation div .type-area:focus{
+    margin: none;
+    border: none;
+    outline: 0;
+    box-shadow: none;
+    width: 100%;
+    height: 100%;
+    font-size: 14px;
+}
+
+.main-screen .nav-bar .search-conversation div{
+    background-color: #fff;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    border: 1px solid rgb(216, 216, 216);
+    outline: 0;
+    box-shadow: none;
+    width: 100%;
+    height: 100%;
+}
+
+.main-screen .nav-bar .search-conversation div button,
+.main-screen .nav-bar .search-conversation div button:hover{
+    box-shadow: none;
+    outline: 0;
+    background-color: #fff;
+    border: none;
 }
 
 .main-screen .nav-bar .conversations{
@@ -41,7 +71,6 @@
 .nav-bar .header .user-avatar, .nav-bar .header .user-avatar:focus{
     margin-right: auto;
     margin-left: 6px;
-    /* margin-right: 100%; */
     justify-self: flex-start;
     position: relative;
     left: 5px;
@@ -75,12 +104,7 @@
     border: none;
     width: 30px;
     height: 30px;
-
     margin-right: 10px;
-
-    width: fit-content;
-    height: fit-content;
-
     border-radius: 50%;
 }
 

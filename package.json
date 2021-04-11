@@ -19,14 +19,24 @@
     "url": "https://github.com/leo123nunes/whatsappclone-javascript/issues"
   },
   "homepage": "https://github.com/leo123nunes/whatsappclone-javascript#readme",
-  "dependencies": {},
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^5.15.3",
+    "font-awesome": "^4.7.0"
+  },
   "devDependencies": {
+    "@babel/core": "^7.13.15",
+    "@babel/preset-react": "^7.13.13",
+    "babel-core": "^6.26.3",
+    "babel-loader": "^8.2.2",
     "bootstrap": "^4.6.0",
     "copy-webpack-plugin": "^8.1.1",
     "cross-env": "^7.0.3",
     "css-loader": "^5.2.0",
+    "file-loader": "^6.2.0",
     "mini-css-extract-plugin": "^1.4.0",
+    "node-sass": "^5.0.0",
     "optimize-css-assets-webpack-plugin": "^5.0.4",
+    "sass-loader": "^11.0.1",
     "style-loader": "^2.0.0",
     "uglifyjs-webpack-plugin": "^2.2.0",
     "webpack": "^5.30.0",

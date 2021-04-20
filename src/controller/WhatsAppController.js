@@ -91,20 +91,76 @@ class WhatsAppController{
         })
 
         this.el.btnAttachPhoto.on('click', event => {
-            console.log('photo')
+            
+            this.el.inputPhoto.click()
+
+            this.el.inputPhoto.on('change', event => {
+                console.log(this.el.inputPhoto.files)
+
+
+                Array.from(this.el.inputPhoto.files).forEach(item => {
+                    console.log(item)
+                })
+            })
+
         })
 
         this.el.btnAttachCamera.on('click', event => {
-            console.log('camera')
+            this.closeAllPanels()
+            this.el.panelCamera.addClass('open')
+
+            this.el.panelCamera.css({
+                height: "100%"
+            })
+        })
+
+        this.el.btnClosePanelCamera.on('click', event => {
+            this.closeAllPanels()
+            this.el.panelMessagesContainer.show()
+        })
+
+        this.el.btnTakePicture.on('click', event => {
+            console.log('button take picture camera')
         })
 
         this.el.btnAttachDocument.on('click', event => {
-            console.log('document')
+
+            this.closeAllPanels()
+
+            this.el.inputDocument.click()
+
+            this.el.panelDocumentPreview.addClass('open')
+            this.el.panelDocumentPreview.css({
+                height: "100%"
+            })
+        })
+
+        this.el.btnClosePanelDocumentPreview.on('click', event => {
+            this.closeAllPanels()
+            this.el.panelMessagesContainer.show()
         })
 
         this.el.btnAttachContact.on('click', event => {
             console.log('contact')
         })
+        
+        this.el.btnSendDocument.on('click', event => {
+            console.log('sending document...')
+        })
+
+        this.el.btnAttachContact.on('click', event => {
+            this.el.modalContacts.show()
+        })
+
+        this.el.btnCloseModalContacts.on('click', event => {
+            this.el.modalContacts.hide()
+        })
+    }
+
+    closeAllPanels(){
+        this.el.panelMessagesContainer.hide()
+        this.el.panelDocumentPreview.removeClass('open')
+        this.el.panelCamera.removeClass('open')
     }
 
     closeMenuAttach(){

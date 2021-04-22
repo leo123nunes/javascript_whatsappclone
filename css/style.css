@@ -16158,3 +16158,7 @@ html[dir=rtl] ._2ICcy:after{
 #panel-add-contact, #panel-edit-profile{
     display: none;
 }
+
+#input-text br{
+    display: none;
+}

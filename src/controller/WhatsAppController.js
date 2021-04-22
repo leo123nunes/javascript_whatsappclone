@@ -155,6 +155,109 @@ class WhatsAppController{
         this.el.btnCloseModalContacts.on('click', event => {
             this.el.modalContacts.hide()
         })
+
+        this.el.btnSendMicrophone.on('click', event => {
+            this.el.recordMicrophone.show()
+            this.el.btnSendMicrophone.hide()
+            this.startMicrophoneRecorderTimer()
+        })
+
+        this.el.btnCancelMicrophone.on('click', event => {
+            this.el.recordMicrophone.hide()
+            this.el.btnSendMicrophone.show()
+            this.finishMicrophoneRecorderTimer()
+        })
+
+        this.el.btnFinishMicrophone.on('click', event => {
+            this.el.recordMicrophone.hide()
+            this.el.btnSendMicrophone.show()
+            this.finishMicrophoneRecorderTimer()
+        })
+
+        this.el.inputText.on('keypress', event => {
+
+            if(event.key == "Enter" && !event.ctrlKey){
+                event.preventDefault()
+                this.el.btnSend.click()
+            }
+
+        })
+
+        this.el.btnSend.on('click', event => {
+            console.log(this.el.inputText.innerHTML)
+        })
+
+        this.el.inputText.on('keyup', event => {
+
+            if(this.el.inputText.firstChild.nodeName == 'BR'){
+                this.el.inputText.removeChild(this.el.inputText.firstChild)
+            }
+
+            if(this.el.inputText.innerHTML.length){
+                this.el.inputPlaceholder.hide()
+                this.el.btnSendMicrophone.hide()
+                this.el.btnSend.show()
+            }else{
+                this.el.inputPlaceholder.show()
+                this.el.btnSendMicrophone.show()
+                this.el.btnSend.hide()
+            }
+
+        })
+
+        this.el.btnEmojis.on('click', event => {
+            this.el.panelEmojis.toggleClass('open')
+        })
+
+        this.el.panelEmojis.querySelectorAll('.emojik').forEach(emoji => {
+            emoji.on('click', event => {
+                let img = this.el.imgEmojiDefault.cloneNode(true)
+
+                emoji.classList.forEach(className => {
+                    img.classList.add(className)
+                })
+
+                img.style.cssText = emoji.style.cssText
+                img.dataset.unicode = emoji.dataset.unicode
+                img.dataset.emojiIndex = emoji.dataset.emojiIndex
+
+                // this.el.inputText.appendChild(img)
+
+                let cursor = document.getSelection()
+
+                if(!cursor.focusNode || cursor.focusNode.id != 'input-text'){
+                    this.el.inputText.focus()
+                }
+
+                let range = cursor.getRangeAt(0)
+
+                range.deleteContents()
+
+                let iconNode = document.createDocumentFragment()
+
+                iconNode.appendChild(img)
+
+                range.insertNode(iconNode)
+
+                range.setStartAfter(img)
+
+                this.el.inputText.dispatchEvent(new Event('keyup'))
+            })
+        })
+    }
+
+    startMicrophoneRecorderTimer(){
+        var start = new Date()
+
+        this._microphoneRecorderInterval = setInterval(() => {
+            var duration = new Date() - start
+            this.el.recordMicrophoneTimer.innerHTML = Format.getTimeFromMilliseconds(duration)
+        }, 100)
+    }
+
+    finishMicrophoneRecorderTimer(){
+        clearInterval(this._microphoneRecorderInterval)
+        this.el.recordMicrophoneTimer.innerHTML = "00:00:00"
     }
 
     closeAllPanels(){
@@ -203,7 +306,11 @@ class WhatsAppController{
         }
 
         Element.prototype.hasClass = function(className){
-            return this.hasClass(className)
+            return this.classList.contains(className)
+        }
+
+        Element.prototype.toggleClass = function(className){
+            this.hasClass(className) ? this.removeClass(className) : this.addClass(className)
         }
 
         Element.prototype.css = function(css){

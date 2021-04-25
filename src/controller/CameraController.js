@@ -20,4 +20,21 @@ export class CameraController{
             track.stop()
         })
     }
+
+    takePicture(imageType = "image/png"){
+
+        let width = this._stream.getVideoTracks()[0].getSettings().width
+        let height = this._stream.getVideoTracks()[0].getSettings().height
+
+        let canvas = document.createElement('canvas')
+
+        canvas.setAttribute('width', width)
+        canvas.setAttribute('height', height)
+
+        let ctx = canvas.getContext('2d')
+
+        ctx.drawImage(this._videoCamera, 0, 0, canvas.width, canvas.height)
+
+        return canvas.toDataURL(imageType)
+    }
 }

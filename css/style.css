@@ -11336,7 +11336,7 @@ html[dir=rtl] ._1tfR8{
     display:flex;
     -webkit-justify-content:center;
     justify-content:center;
-    min-height:90px;
+    /* min-height:90px; */
     position:relative;
     z-index:2
 }
@@ -16161,4 +16161,26 @@ html[dir=rtl] ._2ICcy:after{
 
 #input-text br{
     display: none;
+}
+
+#btn-camera-icon{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+
+#container-take-picture{
+    height: 10%;
+}
+
+#panel-camera{
+    background-color: rgb(255, 65, 65);
+}
+
+.camera-picture-area{
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }

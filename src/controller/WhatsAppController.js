@@ -126,7 +126,22 @@ export class WhatsAppController{
         })
 
         this.el.btnTakePicture.on('click', event => {
-            console.log('button take picture camera')
+            let dataUrl = this._camera.takePicture()
+            
+            this.el.pictureCamera.src = dataUrl
+            this.el.containerTakePicture.hide()
+            this.el.btnReshootPanelCamera.show()
+            this.el.containerSendPicture.show()
+            this.el.videoCamera.hide()
+            this.el.pictureCamera.show()
+        })
+
+        this.el.btnReshootPanelCamera.on('click', event => {
+            this.el.containerTakePicture.show()
+            this.el.btnReshootPanelCamera.hide()
+            this.el.containerSendPicture.hide()
+            this.el.videoCamera.show()
+            this.el.pictureCamera.hide()
         })
 
         this.el.btnAttachDocument.on('click', event => {

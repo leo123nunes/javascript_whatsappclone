@@ -1,5 +1,6 @@
 import { CameraController } from './CameraController'
 import { Format } from '../util/Format'
+import { DocumentPreviewController } from './DocumentPreviewController'
 
 export class WhatsAppController{
 
@@ -150,9 +151,29 @@ export class WhatsAppController{
 
             this.el.inputDocument.click()
 
-            this.el.panelDocumentPreview.addClass('open')
-            this.el.panelDocumentPreview.css({
-                height: "100%"
+            this.el.inputDocument.on('change', event => {
+                this._documentPreview = new DocumentPreviewController(this.el.inputDocument.files[0])
+
+                this.el.panelDocumentPreview.addClass('open')
+                this.el.panelDocumentPreview.show()
+
+                this._documentPreview.getFilePreview().then(data => {
+                    this.el.filePanelDocumentPreview.show()
+                    this.el.infoPanelDocumentPreview.innerHTML = data.fileName
+                    this.el.imgPanelDocumentPreview.src = data.src
+
+                    console.log(data)
+
+                    switch(data.type){
+                        case "application/pdf":
+                            this.el.filePanelDocumentPreview.hide()
+                            this.el.imagePanelDocumentPreview.show()
+                        break;
+                    }
+
+                }).catch(error => {
+                    console.log(error)
+                })
             })
         })
 
@@ -241,8 +262,6 @@ export class WhatsAppController{
                 img.style.cssText = emoji.style.cssText
                 img.dataset.unicode = emoji.dataset.unicode
                 img.dataset.emojiIndex = emoji.dataset.emojiIndex
-
-                // this.el.inputText.appendChild(img)
 
                 let cursor = document.getSelection()
 

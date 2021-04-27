@@ -2,6 +2,7 @@ import { CameraController } from './CameraController'
 import { Format } from '../util/Format'
 import { DocumentPreviewController } from './DocumentPreviewController'
 import { MicrophoneController } from './MicrophoneController'
+import { Firebase } from '../util/Firebase'
 
 export class WhatsAppController{
 
@@ -12,6 +13,8 @@ export class WhatsAppController{
         this.loadElements()
 
         this.initEvents()
+
+        this._firebase = new Firebase()
 
     }
 
@@ -206,7 +209,6 @@ export class WhatsAppController{
             this._microphone = new MicrophoneController()
 
             this._microphone.on('ready', x => {
-                this.startMicrophoneRecorderTimer()
                 this._microphone.startRecorder()
             })
 
@@ -223,20 +225,28 @@ export class WhatsAppController{
                 // })
             })
 
+            this._microphone.on('timer', duration => {
+
+                this.el.recordMicrophoneTimer.innerHTML = Format.getTimeFromMilliseconds(duration)
+
+            })
+
+            this._microphone.on('stoptimer', () => {
+                this.el.recordMicrophoneTimer.innerHTML = "00:00:00"
+            })
+
         })
 
         this.el.btnCancelMicrophone.on('click', event => {
-            this._microphone.stop()
+            this._microphone.stopRecorder()
             this.el.recordMicrophone.hide()
             this.el.btnSendMicrophone.show()
-            this.finishMicrophoneRecorderTimer()
         })
 
         this.el.btnFinishMicrophone.on('click', event => {
-            this._microphone.stop()
+            this._microphone.stopRecorder()
             this.el.recordMicrophone.hide()
             this.el.btnSendMicrophone.show()
-            this.finishMicrophoneRecorderTimer()
         })
 
         this.el.inputText.on('keypress', event => {
@@ -307,20 +317,6 @@ export class WhatsAppController{
                 this.el.inputText.dispatchEvent(new Event('keyup'))
             })
         })
-    }
-
-    startMicrophoneRecorderTimer(){
-        var start = new Date()
-
-        this._microphoneRecorderInterval = setInterval(() => {
-            var duration = new Date() - start
-            this.el.recordMicrophoneTimer.innerHTML = Format.getTimeFromMilliseconds(duration)
-        }, 100)
-    }
-
-    finishMicrophoneRecorderTimer(){
-        clearInterval(this._microphoneRecorderInterval)
-        this.el.recordMicrophoneTimer.innerHTML = "00:00:00"
     }
 
     closeAllPanels(){

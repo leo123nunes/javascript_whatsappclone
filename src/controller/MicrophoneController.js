@@ -24,15 +24,9 @@ export class MicrophoneController extends ClassEvents{
                 this._mediaError = 'NotAllowedError'
                 this.trigger('error', 'The user did not allow the use of a microphone.')
             }else{
-                this._mediaError = error.name
+                this._mediaError = error
                 this.trigger('error', this._mediaError)
             }
-        })
-    }
-
-    stop(){
-        this._stream.getTracks().forEach(track => {
-            track.stop()
         })
     }
 
@@ -60,24 +54,49 @@ export class MicrophoneController extends ClassEvents{
 
                 let file = new File([blob], fileName, { type: this._mimeType, lastModified: Date.now()})
                 
-                let fileReader = new FileReader()
+                // let fileReader = new FileReader()
 
-                fileReader.onload = () => {
+                // fileReader.onload = () => {
 
-                    let audio = new Audio(fileReader.result)
+                //     let audio = new Audio(fileReader.result)
 
-                    audio.play()
-                }
+                //     audio.play()
+                // }
 
-                fileReader.readAsDataURL(file)
+                // fileReader.readAsDataURL(file)
             })
 
             this._mediaRecorder.start()
+            this.startTimer()
         }
     }
     
     stopRecorder(){
-        this._mediaRecorder.stop()
-        this.stop()
+
+        if(this.isAvailable()){
+            
+            this._mediaRecorder.stop()
+            this._stream.getTracks().forEach(track => {
+                track.stop()
+            })
+    
+            this.stopTimer()
+            this.trigger('stoptimer', null)
+
+        }
+    }
+
+    startTimer(){
+        var start = new Date()
+
+        this._microphoneRecorderInterval = setInterval(() => {
+            var duration = new Date() - start
+
+            this.trigger('timer', duration)
+        }, 100)
+    }
+
+    stopTimer(){
+        clearInterval(this._microphoneRecorderInterval)
     }
 }

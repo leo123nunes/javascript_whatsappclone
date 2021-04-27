@@ -1,6 +1,7 @@
 import { CameraController } from './CameraController'
 import { Format } from '../util/Format'
 import { DocumentPreviewController } from './DocumentPreviewController'
+import { MicrophoneController } from './MicrophoneController'
 
 export class WhatsAppController{
 
@@ -201,16 +202,38 @@ export class WhatsAppController{
         this.el.btnSendMicrophone.on('click', event => {
             this.el.recordMicrophone.show()
             this.el.btnSendMicrophone.hide()
-            this.startMicrophoneRecorderTimer()
+
+            this._microphone = new MicrophoneController()
+
+            this._microphone.on('ready', x => {
+                this.startMicrophoneRecorderTimer()
+                this._microphone.startRecorder()
+            })
+
+            this._microphone.on('error', arg => {
+                this.el.recordMicrophone.hide()
+                this.el.btnSendMicrophone.show()
+                console.log(arg)
+
+                
+                // navigator.permissions.query({name:'camera'}).then(result => {
+                //     console.log(result)
+                // }).catch(error => {
+                //     console.log(error)
+                // })
+            })
+
         })
 
         this.el.btnCancelMicrophone.on('click', event => {
+            this._microphone.stop()
             this.el.recordMicrophone.hide()
             this.el.btnSendMicrophone.show()
             this.finishMicrophoneRecorderTimer()
         })
 
         this.el.btnFinishMicrophone.on('click', event => {
+            this._microphone.stop()
             this.el.recordMicrophone.hide()
             this.el.btnSendMicrophone.show()
             this.finishMicrophoneRecorderTimer()

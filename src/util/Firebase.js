@@ -29,6 +29,20 @@ export class Firebase{
 
     }
 
+    initAuth(){
+        let provider = new firebase.auth.GoogleAuthProvider()
+
+        return new Promise((resolve, reject) => {
+
+            firebase.auth().signInWithPopup(provider).then(resp => {
+                resolve(resp)
+            }).catch(error => {
+                reject(error)
+            })
+
+        })
+    }
+
     static db(){
         return firebase.firestore()
     }

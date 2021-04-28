@@ -8,14 +8,25 @@ export class WhatsAppController{
 
     constructor(){
 
+        this._firebase = new Firebase()
+
+        this.initAuth()
+
         this.loadElementPrototypeCustomizedEvents()
 
         this.loadElements()
 
         this.initEvents()
 
-        this._firebase = new Firebase()
+    }
 
+    initAuth(){
+        this._firebase.initAuth().then(resp => {
+            console.log(resp)
+            this.el.app.css({display: "block"})
+        }).catch(error => {
+            console.log("error", error)
+        })
     }
 
     loadElements(){

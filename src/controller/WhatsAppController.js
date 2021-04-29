@@ -3,6 +3,7 @@ import { Format } from '../util/Format'
 import { DocumentPreviewController } from './DocumentPreviewController'
 import { MicrophoneController } from './MicrophoneController'
 import { Firebase } from '../util/Firebase'
+import { User } from '../model/User'
 
 export class WhatsAppController{
 
@@ -22,8 +23,41 @@ export class WhatsAppController{
 
     initAuth(){
         this._firebase.initAuth().then(resp => {
-            console.log(resp)
-            this.el.app.css({display: "block"})
+
+            let userObj = {
+                name: resp.user.displayName,
+                email: resp.user.email,
+                photo: resp.user.photoURL
+            }
+
+            this._user = new User(userObj)
+
+            this._user.on('datachange', user => {
+
+                document.querySelector('title').innerHTML = `${user.name} - WhatsApp Clone`
+
+                if(user.photo){
+                    this.el.imgDefaultPanelEditProfile.hide()
+
+                    let profilePhoto = this.el.myPhoto.querySelector('img')
+                    profilePhoto.src = user.photo
+                    profilePhoto.show()
+
+                    let editProfilePhoto = this.el.photoContainerEditProfile.querySelector('img')
+                    editProfilePhoto.src = user.photo
+                    editProfilePhoto.show()
+                    
+                    let editProfileName = this.el.inputNamePanelEditProfile
+                    editProfileName.innerHTML = user.name
+
+                }
+
+            })
+
+            this._user.on('userloaded', () => {
+                this.el.app.css({ display: "block"})
+            })
+
         }).catch(error => {
             console.log("error", error)
         })

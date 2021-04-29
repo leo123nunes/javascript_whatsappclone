@@ -19,11 +19,11 @@ export class Firebase{
 
     init(){
 
-        if(!this._initialized){
+        if(!this._initializedFirebase){
 
             firebase.initializeApp(this._firebaseConfig)
 
-            this._initialized = true
+            this._initializedFirebase = true
 
         }
 

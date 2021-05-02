@@ -7,7 +7,7 @@ export class Model extends ClassEvents{
         this._data = {}
     }
 
-    getJson(json){
+    toJson(json){
         this._data = Object.assign(this._data, json)
 
         this.trigger('datachange', this.fromJson())
@@ -15,10 +15,6 @@ export class Model extends ClassEvents{
 
     fromJson(){
         return this._data
-    }
-
-    userLoaded(){
-        this.trigger('userloaded', null)
     }
 
 }

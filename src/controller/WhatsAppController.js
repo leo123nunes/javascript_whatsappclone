@@ -4,6 +4,7 @@ import { DocumentPreviewController } from './DocumentPreviewController'
 import { MicrophoneController } from './MicrophoneController'
 import { Firebase } from '../util/Firebase'
 import { User } from '../model/User'
+import { Chat } from '../model/Chat'
 
 export class WhatsAppController{
 
@@ -68,7 +69,11 @@ export class WhatsAppController{
         this._user.on('contactschange', docs => {
             this.el.contactsMessagesList.innerHTML = ''
 
+            // console.log(`on contacts change docs:`)
+
             docs.forEach(doc => {
+
+                // console.log(doc)
 
                 let div = document.createElement('div')
 
@@ -131,6 +136,23 @@ export class WhatsAppController{
                         photo.src = doc.photo
                         photo.show()
                     }
+
+                    div.on('click', event => {
+                        this.el.home.hide()
+
+                        if(doc.photo){
+                            let photo = this.el.main.querySelector('#active-photo')
+                            photo.src = doc.photo
+                            photo.show()
+                        }
+
+                        this.el.activeName.innerHTML = doc.name
+                        this.el.activeStatus.innerHTML = doc.status
+
+                        this.el.main.css({
+                            display: "flex"
+                        })
+                    })
 
                     this.el.contactsMessagesList.appendChild(div)
 
@@ -211,10 +233,31 @@ export class WhatsAppController{
             let newUser = new User(data.get('email'))
 
             newUser.on('datachange', user => {
+
                 this._user.addContact(user).then(resp => {
-                    this.el.panelAddContact.hide()
+
+                    console.log(`add contact resp: ${resp}`)
+
+                    Chat.createIfNotExists(this._user.email, user.email).then(id => {
+
+                        console.log(`chat created. id: ${id}`)
+                        newUser.chatId = id
+                        this._user.chatId = id
+
+                        this._user.saveContactData(newUser.data).then(() => {
+                            newUser.saveContactData(this._user.data).then(() => {
+                                this.el.panelAddContact.hide()
+                            })
+                        }).catch(error => {
+                            console.log(error)
+                        })
+
+                    }).catch(error => {
+                        console.log(`error creating new chat: ${error}`)
+                    })
+
                 }).catch(error => {
-                    alert('User not found.')
+                    alert(error)
                 })
             })            
         })

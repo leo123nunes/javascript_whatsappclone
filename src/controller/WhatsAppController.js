@@ -5,6 +5,7 @@ import { MicrophoneController } from './MicrophoneController'
 import { Firebase } from '../util/Firebase'
 import { User } from '../model/User'
 import { Chat } from '../model/Chat'
+import { Message } from '../model/Message'
 
 export class WhatsAppController{
 
@@ -69,11 +70,7 @@ export class WhatsAppController{
         this._user.on('contactschange', docs => {
             this.el.contactsMessagesList.innerHTML = ''
 
-            // console.log(`on contacts change docs:`)
-
             docs.forEach(doc => {
-
-                // console.log(doc)
 
                 let div = document.createElement('div')
 
@@ -137,20 +134,55 @@ export class WhatsAppController{
                         photo.show()
                     }
 
-                    div.on('click', event => {
-                        this.el.home.hide()
+                    div.on('click', () => {
 
-                        if(doc.photo){
-                            let photo = this.el.main.querySelector('#active-photo')
-                            photo.src = doc.photo
-                            photo.show()
+                        if(this._selectedContact){
+                            Message.getRef(this._selectedContact.chatId).onSnapshot(() => {})
                         }
 
-                        this.el.activeName.innerHTML = doc.name
-                        this.el.activeStatus.innerHTML = doc.status
+                        this.el.panelMessagesContainer.innerHTML = ''
+                        
+                        this.selectContact(doc)
 
-                        this.el.main.css({
-                            display: "flex"
+                        this._selectedContact = doc
+
+                        Message.getRef(this._selectedContact.chatId)
+                        .orderBy('timeStamp')
+                        .onSnapshot(docs => {
+
+                            let autoScroll = this.el.panelMessagesContainer.scrollHeight > this.el.panelMessagesContainer.offsetHeight ? true : false
+                            let scrollTopMax = this.el.panelMessagesContainer.scrollTopMax
+                            let scrollTop = this.el.panelMessagesContainer.scrollTop
+                            let scrollHeight = this.el.panelMessagesContainer.scrollHeight
+
+                            docs.forEach(doc => {
+
+                                if(!this.el.panelMessagesContainer.querySelector(`#message${doc.id}`)){
+
+                                    let message = new Message()
+
+                                    let docData = doc.data()
+                                    docData.id = `message${doc.id}`
+
+                                    message.on('datachange', () => {
+                                        let me = (doc.data().from == this._user.email) ? true : false
+
+                                        let view = message.getImageView(me)
+
+                                        this.el.panelMessagesContainer.appendChild(view)
+                                    })
+
+                                    message.fromJson(docData)
+                                }
+
+                            })
+
+                            if((autoScroll && scrollTop >= scrollTopMax) || scrollHeight == this.el.panelMessagesContainer.offsetHeight){
+                                this.el.panelMessagesContainer.scrollTop = this.el.panelMessagesContainer.scrollTopMax
+                            }else{
+                                this.el.panelMessagesContainer.scrollTop = scrollTop
+                            }
+
                         })
                     })
 
@@ -159,6 +191,23 @@ export class WhatsAppController{
             })
         })
 
+    }
+
+    selectContact(doc){
+        this.el.home.hide()
+
+        if(doc.photo){
+            let photo = this.el.main.querySelector('#active-photo')
+            photo.src = doc.photo
+            photo.show()
+        }
+
+        this.el.activeName.innerHTML = doc.name
+        this.el.activeStatus.innerHTML = doc.status
+
+        this.el.main.css({
+            display: "flex"
+        })
     }
 
     loadElements(){
@@ -223,7 +272,6 @@ export class WhatsAppController{
             })
         })
 
-
         this.el.formPanelAddContact.on('submit', event => {
 
             event.preventDefault()
@@ -236,11 +284,8 @@ export class WhatsAppController{
 
                 this._user.addContact(user).then(resp => {
 
-                    console.log(`add contact resp: ${resp}`)
-
                     Chat.createIfNotExists(this._user.email, user.email).then(id => {
 
-                        console.log(`chat created. id: ${id}`)
                         newUser.chatId = id
                         this._user.chatId = id
 
@@ -291,11 +336,11 @@ export class WhatsAppController{
             this.el.inputPhoto.click()
 
             this.el.inputPhoto.on('change', event => {
-                console.log(this.el.inputPhoto.files)
+                // console.log(this.el.inputPhoto.files)
 
 
                 Array.from(this.el.inputPhoto.files).forEach(item => {
-                    console.log(item)
+                    // console.log(item)
                 })
             })
 
@@ -354,7 +399,7 @@ export class WhatsAppController{
                     this.el.infoPanelDocumentPreview.innerHTML = data.fileName
                     this.el.imgPanelDocumentPreview.src = data.src
 
-                    console.log(data)
+                    // console.log(data)
 
                     switch(data.type){
                         case "application/pdf":
@@ -375,7 +420,7 @@ export class WhatsAppController{
         })
 
         this.el.btnAttachContact.on('click', event => {
-            console.log('contact')
+            // console.log('contact')
         })
         
         this.el.btnSendDocument.on('click', event => {
@@ -403,14 +448,6 @@ export class WhatsAppController{
             this._microphone.on('error', arg => {
                 this.el.recordMicrophone.hide()
                 this.el.btnSendMicrophone.show()
-                console.log(arg)
-
-                
-                // navigator.permissions.query({name:'camera'}).then(result => {
-                //     console.log(result)
-                // }).catch(error => {
-                //     console.log(error)
-                // })
             })
 
             this._microphone.on('timer', duration => {
@@ -446,14 +483,28 @@ export class WhatsAppController{
 
         })
 
-        this.el.btnSend.on('click', event => {
-            console.log(this.el.inputText.innerHTML)
+        this.el.btnSend.on('click', () => {
+
+            if(this.el.inputText.innerHTML.replace(/\s/g, '').length && this.el.inputText.innerHTML.length){
+
+                Message.send(this._selectedContact.chatId, this.el.inputText.innerHTML, this._user.email, 'text')
+                .then(data => {
+                    this.el.inputText.innerHTML = ''
+                    this.el.panelEmojis.removeClass('open')
+                }).catch(error => {
+                    console.log('error sending the message ', error)
+                })
+
+            }
+            
+
         })
 
         this.el.inputText.on('keyup', event => {
 
-            if(this.el.inputText.firstChild.nodeName == 'BR'){
-                this.el.inputText.removeChild(this.el.inputText.firstChild)
+
+            if(this.el.inputText.innerHTML == '<br>'){
+                this.el.inputText.innerHTML = ''
             }
 
             if(this.el.inputText.innerHTML.length){

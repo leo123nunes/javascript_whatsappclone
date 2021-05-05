@@ -45,7 +45,7 @@ export class Chat extends Model{
         return new Promise((resolve, reject) => {
 
             Chat.getRef().add({
-                timeStamp: Date.now(),
+                timeStamp: new Date(),
                 users
             }).then(doc => {
 

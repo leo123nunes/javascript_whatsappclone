@@ -7,13 +7,13 @@ export class Model extends ClassEvents{
         this._data = {}
     }
 
-    toJson(json){
+    fromJson(json){
         this._data = Object.assign(this._data, json)
 
-        this.trigger('datachange', this.fromJson())
+        this.trigger('datachange', this.toJson())
     }
 
-    fromJson(){
+    toJson(){
         return this._data
     }
 

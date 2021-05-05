@@ -19,7 +19,7 @@ export class ClassEvents{
 
         args.push(new Event(eventName))
 
-        this._events[eventName].forEach(fn => {
+        this._events[eventName] && this._events[eventName].forEach(fn => {
             fn.apply(null, args)
         })
     }

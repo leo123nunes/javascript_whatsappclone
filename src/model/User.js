@@ -75,7 +75,7 @@ export class User extends Model{
     //                 this.createNewUser().then(newUser => {
 
     //                     User.getRef().doc(id).onSnapshot(data => {
-    //                         this.toJson(data.data())
+    //                         this.fromJson(data.data())
     //                     })
 
     //                     resolve(newUser)
@@ -89,7 +89,7 @@ export class User extends Model{
 
     //                 User.getRef().doc(id).onSnapshot(data => {
     //                     console.log(`data changed, new data: ${data.data()}`)
-    //                     this.toJson(data.data())
+    //                     this.fromJson(data.data())
     //                 })
 
     //                 resolve(data.data())
@@ -113,7 +113,7 @@ export class User extends Model{
                 this.createNewUser().then(() => {
 
                     User.getRef().doc(id).onSnapshot(newData => {
-                        this.toJson(newData.data())
+                        this.fromJson(newData.data())
                     })
 
                 }).catch(error => {
@@ -126,7 +126,7 @@ export class User extends Model{
 
                 User.getRef().doc(id).onSnapshot(newData => {
                     // console.log(`data changed, new data: ${newData.data()}`)
-                    this.toJson(newData.data())
+                    this.fromJson(newData.data())
                 })
 
             }
@@ -183,6 +183,10 @@ export class User extends Model{
         return new Promise((success, failure) => {
 
             User.getContactsRef(this.email).onSnapshot(docs => {
+
+                if(docs.empty){
+                    failure(`User.getContactsRef(this.email).onSnapshot is empty.`)
+                }
 
                 var data = []  
 

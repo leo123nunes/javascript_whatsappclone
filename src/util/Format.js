@@ -27,4 +27,8 @@ export class Format{
         return `${hour}:${minute}:${second}`
 
     }
+
+    static timeStampToTime(date){
+        return date.toDate().toLocaleTimeString()
+    }
 }

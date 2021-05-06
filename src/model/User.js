@@ -64,46 +64,6 @@ export class User extends Model{
         return User.getRef().doc(id).collection('contacts')
     }
 
-    // getUserById(id){
-
-    //     return new Promise((resolve, reject) => {
-
-    //         User.getRef().doc(id).get().then(data => {
-
-    //             if(!data.data() && this._data.name){        
-
-    //                 this.createNewUser().then(newUser => {
-
-    //                     User.getRef().doc(id).onSnapshot(data => {
-    //                         this.fromJson(data.data())
-    //                     })
-
-    //                     resolve(newUser)
-    //                 }).catch(error => {
-    //                     console.log('error creating new user: ', error)
-    //                 })
-
-    //             }else if(!data.data() && !this._data.name){
-    //                 resolve(`user not found: ${data.data()}`)
-    //             }else{
-
-    //                 User.getRef().doc(id).onSnapshot(data => {
-    //                     console.log(`data changed, new data: ${data.data()}`)
-    //                     this.fromJson(data.data())
-    //                 })
-
-    //                 resolve(data.data())
-    //             }
-
-    //         }).catch(error => {
-    //             reject(error)
-    //         })
-            
-    //     })
-        
-
-    // }
-
     getUserById(id){
 
         User.getRef().doc(id).get().then(data => {
@@ -125,7 +85,6 @@ export class User extends Model{
             }else{
 
                 User.getRef().doc(id).onSnapshot(newData => {
-                    // console.log(`data changed, new data: ${newData.data()}`)
                     this.fromJson(newData.data())
                 })
 
@@ -178,29 +137,55 @@ export class User extends Model{
 
     }
 
-    loadContacts(){
+    loadContacts(filter = ''){
 
-        return new Promise((success, failure) => {
+        if(filter == ''){
 
-            User.getContactsRef(this.email).onSnapshot(docs => {
-
-                if(docs.empty){
-                    failure(`User.getContactsRef(this.email).onSnapshot is empty.`)
-                }
-
-                var data = []  
-
-                docs.forEach(doc => {
+            return new Promise((success, failure) => {
     
-                    data.push(doc.data())
-                })
-
-                this.trigger('contactschange', data)
-
-                success(docs)
-            })
-        })
+                User.getContactsRef(this.email).onSnapshot(docs => {
+    
+                    if(docs.empty){
+                        failure("No contacts.")
+                    }
+    
+                    var data = []  
+    
+                    docs.forEach(doc => {
         
+                        data.push(doc.data())
+                    })
+    
+                    this.trigger('contactschange', data)
+    
+                    success(docs)
+                })
+            })
+
+        }else{
+
+            return new Promise((success, failure) => {
+    
+                User.getContactsRef(this.email).where('name', '==', filter).onSnapshot(docs => {
+    
+                    if(docs.empty){
+                        failure("No users found.")
+                    }
+    
+                    var data = []  
+    
+                    docs.forEach(doc => {
+        
+                        data.push(doc.data())
+                    })
+    
+                    this.trigger('contactschange', data)
+    
+                    success(docs)
+                })
+            })
+        }
+ 
     }
 
 }

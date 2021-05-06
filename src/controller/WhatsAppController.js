@@ -215,9 +215,35 @@ export class WhatsAppController{
         document.querySelectorAll('[id]').forEach(element => {
             this.el[Format.getCamelCase(element.id)] = element
         })
+
+        this.el.searchconversationContact.value = ''
     }
 
     initEvents(){
+
+        this.el.searchconversationContact.on('keyup', () => {
+            if(this.el.searchconversationContact.value.length){
+                this.el.searchconversationPlaceholder.hide()
+            }else{
+                this.el.searchconversationPlaceholder.show()
+            }
+
+            this._user.loadContacts(this.el.searchconversationContact.value).then(() => {})
+            .catch(msg => {
+
+                let noUsersFound = document.createElement('div')
+
+                noUsersFound.css({
+                    display: "flex",
+                    "justify-content": "center"
+                })
+
+                noUsersFound.innerHTML = msg
+
+                this.el.contactsMessagesList.appendChild(noUsersFound)
+            })
+        })
+
         this.el.myPhoto.on('click', event => {
             this.el.panelEditProfile.show()
             setTimeout(() => {

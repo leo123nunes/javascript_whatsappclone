@@ -155,24 +155,37 @@ export class WhatsAppController{
                             let scrollTop = this.el.panelMessagesContainer.scrollTop
                             let scrollHeight = this.el.panelMessagesContainer.scrollHeight
 
-                            docs.forEach(doc => {
+                            docs.forEach(doc => {        
+
+                                var me = (doc.data().from == this._user.email) ? true : false
+
+                                var message = new Message()
+
+                                var docData = doc.data()
+
+                                docData.id = `message${doc.id}`
+
+                                message.on('datachange', () => {
+
+                                    let view = message.getImageView(me)
+
+                                    this.el.panelMessagesContainer.appendChild(view)
+
+                                })
 
                                 if(!this.el.panelMessagesContainer.querySelector(`#message${doc.id}`)){
 
-                                    let message = new Message()
-
-                                    let docData = doc.data()
-                                    docData.id = `message${doc.id}`
-
-                                    message.on('datachange', () => {
-                                        let me = (doc.data().from == this._user.email) ? true : false
-
-                                        let view = message.getImageView(me)
-
-                                        this.el.panelMessagesContainer.appendChild(view)
-                                    })
-
                                     message.fromJson(docData)
+
+                                }else{
+                                    
+                                    if(me){
+
+                                        this.el.panelMessagesContainer.querySelector(`#message${doc.id}`).parentElement.outerHTML = ''
+
+                                        message.fromJson(docData)
+                                    }
+                                    
                                 }
 
                             })

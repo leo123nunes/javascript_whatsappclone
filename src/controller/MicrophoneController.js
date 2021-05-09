@@ -54,16 +54,16 @@ export class MicrophoneController extends ClassEvents{
 
                 let file = new File([blob], fileName, { type: this._mimeType, lastModified: Date.now()})
                 
-                // let fileReader = new FileReader()
+                let fileReader = new FileReader()
 
-                // fileReader.onload = () => {
+                fileReader.onload = () => {
 
-                //     let audio = new Audio(fileReader.result)
+                    let audio = new Audio(fileReader.result)
 
-                //     audio.play()
-                // }
+                    audio.play()
+                }
 
-                // fileReader.readAsDataURL(file)
+                fileReader.readAsDataURL(file)
             })
 
             this._mediaRecorder.start()

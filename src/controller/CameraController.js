@@ -9,7 +9,6 @@ export class CameraController{
             this._videoCamera.play()
 
         }).catch(error => {
-            console.log('error opening the camera.')
             console.log(error)
         })
         

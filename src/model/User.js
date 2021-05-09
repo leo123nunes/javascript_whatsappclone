@@ -1,5 +1,6 @@
 import { Firebase } from '../util/Firebase'
 import { Model } from '../model/Model'
+import { Chat } from './Chat'
 
 export class User extends Model{
 
@@ -9,12 +10,6 @@ export class User extends Model{
         if(id){
 
             this.getUserById(id)
-
-            // this.getUserById(id).then(resp => {
-                
-            // }).catch(error => {
-            //     console.log(error)
-            // })
 
         }
 

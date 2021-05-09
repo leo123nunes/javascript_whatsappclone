@@ -40,16 +40,12 @@ export class Chat extends Model{
         users[meEmailId] = true
         users[contactEmailId] = true
 
-        // console.log(users)
-
         return new Promise((resolve, reject) => {
 
             Chat.getRef().add({
                 timeStamp: new Date(),
                 users
             }).then(doc => {
-
-                console.log(`chat created, doc: ${doc}`)
                 resolve(doc.id)
             }).catch(error => {
                 reject(error)
@@ -67,7 +63,6 @@ export class Chat extends Model{
                 if(resp.empty){
 
                     Chat.create(meEmail, contactEmail).then(resp => {
-                        // console.log('chat successfully created.')
                         resolve(resp)
                     }).catch(error => {
                         console.log('error creating chat')

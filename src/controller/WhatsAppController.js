@@ -59,7 +59,7 @@ export class WhatsAppController{
             })
 
         }).catch(error => {
-            console.log("error", error)
+            console.log(error)
         })
     }
 
@@ -149,13 +149,14 @@ export class WhatsAppController{
                         Message.getRef(this._selectedContact.chatId)
                         .orderBy('timeStamp')
                         .onSnapshot(docs => {
+                            this.el.panelMessagesContainer.innerHTML = ''
 
                             let autoScroll = this.el.panelMessagesContainer.scrollHeight > this.el.panelMessagesContainer.offsetHeight ? true : false
                             let scrollTopMax = this.el.panelMessagesContainer.scrollTopMax
                             let scrollTop = this.el.panelMessagesContainer.scrollTop
                             let scrollHeight = this.el.panelMessagesContainer.scrollHeight
 
-                            docs.forEach(doc => {        
+                            docs.forEach(doc => {  
 
                                 var me = (doc.data().from == this._user.email) ? true : false
 
@@ -181,11 +182,29 @@ export class WhatsAppController{
                                     
                                     if(me){
 
+                                        
+
                                         this.el.panelMessagesContainer.querySelector(`#message${doc.id}`).parentElement.outerHTML = ''
 
                                         message.fromJson(docData)
+
                                     }
-                                    
+
+                                }
+
+                                if(!me && docData['status'] == 'received'){
+                                        
+                                        Message.readMessage(this._selectedContact.chatId, doc.id).then(resp => {
+
+                                            docData['status'] == 'read'
+
+                                            message.status = 'read'
+
+                                            let oldStatus = this.el.panelMessagesContainer.querySelector(`#message${doc.id}`)
+
+                                        }).catch(error => {
+                                            console.log(error)
+                                        })
                                 }
 
                             })
@@ -375,11 +394,11 @@ export class WhatsAppController{
             this.el.inputPhoto.click()
 
             this.el.inputPhoto.on('change', event => {
-                // console.log(this.el.inputPhoto.files)
+                console.log(this.el.inputPhoto.files)
 
 
                 Array.from(this.el.inputPhoto.files).forEach(item => {
-                    // console.log(item)
+                    console.log(item)
                 })
             })
 
@@ -438,8 +457,6 @@ export class WhatsAppController{
                     this.el.infoPanelDocumentPreview.innerHTML = data.fileName
                     this.el.imgPanelDocumentPreview.src = data.src
 
-                    // console.log(data)
-
                     switch(data.type){
                         case "application/pdf":
                             this.el.filePanelDocumentPreview.hide()
@@ -459,7 +476,7 @@ export class WhatsAppController{
         })
 
         this.el.btnAttachContact.on('click', event => {
-            // console.log('contact')
+            console.log('contact')
         })
         
         this.el.btnSendDocument.on('click', event => {
@@ -526,10 +543,18 @@ export class WhatsAppController{
 
             if(this.el.inputText.innerHTML.replace(/\s/g, '').length && this.el.inputText.innerHTML.length){
 
-                Message.send(this._selectedContact.chatId, this.el.inputText.innerHTML, this._user.email, 'text')
+                let message = this.el.inputText.innerHTML
+
+                this.el.inputText.innerHTML = ''
+                this.el.panelEmojis.removeClass('open')
+
+                Message.send(this._selectedContact.chatId, message, this._user.email, 'text')
                 .then(data => {
-                    this.el.inputText.innerHTML = ''
-                    this.el.panelEmojis.removeClass('open')
+                    Chat.getRef().doc(data.chatId).collection('messages').doc(data.messageId).set({
+                        status: 'received'
+                    },{
+                        merge: true
+                    }).then(() => {}).catch(error => console.log(error))
                 }).catch(error => {
                     console.log('error sending the message ', error)
                 })

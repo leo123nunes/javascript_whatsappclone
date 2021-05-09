@@ -29,6 +29,6 @@ export class Format{
     }
 
     static timeStampToTime(date){
-        return date.toDate().toLocaleTimeString()
+        return date.toDate().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})
     }
 }

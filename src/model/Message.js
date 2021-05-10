@@ -171,24 +171,12 @@ export class Message extends Model{
                                             </div>
                                         </div>
                                     </div>
-                                    <img src="#" class="_1JVSX message-photo" style="width: 100%; display:none">
+                                    <img src="${this.content}" class="_1JVSX message-photo" style="width: 100%; display:none">
                                     <div class="_1i3Za"></div>
-                                </div>
-                                <div class="message-container-legend">
-                                    <div class="_3zb-j ZhF0n">
-                                        <span dir="ltr" class="selectable-text invisible-space copyable-text message-text">Texto da foto</span>
-                                    </div>
                                 </div>
                                 <div class="_2TvOE">
                                     <div class="_1DZAH text-white" role="button">
-                                        <span class="message-time">17:22</span>
-                                        <div class="message-status">
-                                            <span data-icon="msg-check-light">
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 15" width="16" height="15">
-                                                    <path fill="#c1c0c0" d="M10.91 3.316l-.478-.372a.365.365 0 0 0-.51.063L4.566 9.879a.32.32 0 0 1-.484.033L1.891 7.769a.366.366 0 0 0-.515.006l-.423.433a.364.364 0 0 0 .006.514l3.258 3.185c.143.14.361.125.484-.033l6.272-8.048a.365.365 0 0 0-.063-.51z"></path>
-                                                </svg>
-                                            </span>
-                                        </div>
+                                        <span class="message-time">${Format.timeStampToTime(this.timeStamp)}</span>
                                     </div>
                                 </div>
                             </div>
@@ -303,7 +291,7 @@ export class Message extends Model{
                             </div>
                             <div class="_2f-RV">
                                 <div class="_1DZAH">
-                                    <span class="msg-time">${Format.timeStampToTime(this.timeStamp)}</span>
+                                    <span class="message-time">${Format.timeStampToTime(this.timeStamp)}</span>
                                 </div>
                             </div>
                         </div>
@@ -316,7 +304,18 @@ export class Message extends Model{
         if(me){
             messageTypeClass = 'message-out'
 
-            message.querySelector('.msg-time').parentElement.appendChild(this.getMessageStatusView())
+            message.querySelector('.message-time').parentElement.appendChild(this.getMessageStatusView())
+        }
+
+        if(this.type == 'image'){
+            message.querySelector('img').onload = () => {
+                message.querySelector('._3v3PK').css({
+                    height: 'auto',
+                    width: 'auto'
+                })
+                message.querySelector('._34Olu').hide()
+                message.querySelector('img').show()
+            }
         }
 
         message.firstElementChild.classList.add(messageTypeClass)
@@ -379,6 +378,33 @@ export class Message extends Model{
         }
 
         return status
+    }
+
+    static sendPicture(chatId, from, type, file){
+
+        return new Promise((resolve, reject) => {
+
+            let image = Firebase.hd().ref(from).child(`${Date.now()}_${file.name}`).put(file)
+
+            image.on('state_changed', snap => {
+                console.log(snap)
+            }, error => {
+                reject(error)
+            }, () => {
+
+                image.ref_.getDownloadURL().then(url => {
+
+                    Message.send(chatId, url, from, type).then(resp => {
+                        resolve(resp)
+                    }).catch(error => {
+                        reject(error)
+                    })
+                }).catch(error => {
+                    reject(error)
+                })
+            })
+        })
+
     }
 
     static send(chatId, content, from, type){

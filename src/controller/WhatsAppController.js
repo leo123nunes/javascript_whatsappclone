@@ -394,11 +394,17 @@ export class WhatsAppController{
             this.el.inputPhoto.click()
 
             this.el.inputPhoto.on('change', event => {
-                console.log(this.el.inputPhoto.files)
 
-
-                Array.from(this.el.inputPhoto.files).forEach(item => {
-                    console.log(item)
+                Array.from(this.el.inputPhoto.files).forEach(file => {
+                    Message.sendPicture(this._selectedContact.chatId, this._user.email, 'image', file).then(data => {
+                        Chat.getRef().doc(data.chatId).collection('messages').doc(data.messageId).set({
+                            status: 'received'
+                        },{
+                            merge: true
+                        }).then(() => {}).catch(error => console.log(error))
+                    }).catch(error => {
+                        console.log(error)
+                    })
                 })
             })
 

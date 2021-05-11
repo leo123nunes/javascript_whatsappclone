@@ -34,6 +34,6 @@ export class CameraController{
 
         ctx.drawImage(this._videoCamera, 0, 0, canvas.width, canvas.height)
 
-        return canvas.toDataURL(imageType)
+        return {dataUrl: canvas.toDataURL(imageType), height, width}
     }
 }

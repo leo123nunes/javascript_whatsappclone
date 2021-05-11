@@ -1,6 +1,7 @@
 import { Firebase } from "../util/Firebase";
 import { Model } from "./Model";
 import { Format } from '../util/Format'
+import { Chat } from '../model/Chat'
 
 export class Message extends Model{
     constructor(){
@@ -386,8 +387,8 @@ export class Message extends Model{
 
             let image = Firebase.hd().ref(from).child(`${Date.now()}_${file.name}`).put(file)
 
-            image.on('state_changed', snap => {
-                console.log(snap)
+            image.on('state_changed', () => {
+                
             }, error => {
                 reject(error)
             }, () => {
@@ -449,6 +450,14 @@ export class Message extends Model{
     static readMessage(chatId, messageId){
         return Message.getRef(chatId).doc(messageId).set({
             status: 'read'
+        },{
+            merge: true
+        })
+    }
+
+    static receiveMessage(chatID, messageId){
+        return Chat.getRef().doc(chatID).collection('messages').doc(messageId).set({
+            status: 'received'
         },{
             merge: true
         })

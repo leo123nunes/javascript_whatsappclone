@@ -397,11 +397,9 @@ export class WhatsAppController{
 
                 Array.from(this.el.inputPhoto.files).forEach(file => {
                     Message.sendPicture(this._selectedContact.chatId, this._user.email, 'image', file).then(data => {
-                        Chat.getRef().doc(data.chatId).collection('messages').doc(data.messageId).set({
-                            status: 'received'
-                        },{
-                            merge: true
-                        }).then(() => {}).catch(error => console.log(error))
+                        
+                        Message.receiveMessage(data.chatId, data.messageId).then(() => {}).catch(error => console.log(error))
+                        
                     }).catch(error => {
                         console.log(error)
                     })
@@ -410,7 +408,7 @@ export class WhatsAppController{
 
         })
 
-        this.el.btnAttachCamera.on('click', event => {
+        this.el.btnAttachCamera.on('click', () => {
             this.closeAllPanels()
             this.el.panelCamera.addClass('open')
 
@@ -428,9 +426,17 @@ export class WhatsAppController{
         })
 
         this.el.btnTakePicture.on('click', event => {
+            this.el.btnSendPicture.css({
+                display: "flex"
+            })
+
             let dataUrl = this._camera.takePicture()
             
-            this.el.pictureCamera.src = dataUrl
+            this.el.pictureCamera.src = dataUrl.dataUrl
+            this.el.pictureCamera.css({
+                height: 'inherit'
+            })
+
             this.el.containerTakePicture.hide()
             this.el.btnReshootPanelCamera.show()
             this.el.containerSendPicture.show()
@@ -487,6 +493,50 @@ export class WhatsAppController{
         
         this.el.btnSendDocument.on('click', event => {
             console.log('sending document...')
+        })
+
+        this.el.btnSendPicture.on('click', () => {
+
+            this.el.btnSendPicture.hide()
+
+            let image = new Image()
+
+            image.src = this.el.pictureCamera.src
+
+            let canvas = document.createElement('canvas')
+
+            canvas.setAttribute('width', image.width)
+            canvas.setAttribute('height', image.height)
+
+            let ctx = canvas.getContext('2d')
+
+            ctx.scale(-1, 1)
+
+            ctx.drawImage(image, 0, 0, canvas.width*-1, canvas.height)
+ 
+            let arr = canvas.toDataURL().split(',')
+            let type = arr[0].match(/:(.*?);/)[1]
+            let bstr = atob(arr[1])
+            let n = bstr.length
+            let u8arr = new Uint8Array(n)
+                
+            while(n--){
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+
+            
+            let imgFile =  new File([u8arr], `camera.${type.split('/')[1]}`, {type})
+
+            Message.sendPicture(this._selectedContact.chatId, this._user.email, "image", imgFile).then(data => {
+                Message.receiveMessage(data.chatId, data.messageId).then(() => {}).catch(error => console.log(error))
+                this.el.btnClosePanelCamera.click()
+                this._camera.stop()
+                this.el.pictureCamera.hide()
+                this.el.videoCamera.show()
+                this.el.btnReshootPanelCamera.click()
+            }).catch(error => {
+                console.log(error)
+            })
         })
 
         this.el.btnAttachContact.on('click', event => {

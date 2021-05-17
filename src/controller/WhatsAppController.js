@@ -6,6 +6,7 @@ import { Firebase } from '../util/Firebase'
 import { User } from '../model/User'
 import { Chat } from '../model/Chat'
 import { Message } from '../model/Message'
+import { Base64 } from '../util/base64'
 
 export class WhatsAppController{
 
@@ -168,7 +169,7 @@ export class WhatsAppController{
 
                                 message.on('datachange', () => {
 
-                                    let view = message.getImageView(me)
+                                    let view = message.getMessageView(me)
 
                                     this.el.panelMessagesContainer.appendChild(view)
 
@@ -389,6 +390,10 @@ export class WhatsAppController{
 
         })
 
+        this.el.btnSendDocumentLoading.on('click', () => {
+            alert('Aguarde o envio do arquivo.')
+        })
+
         this.el.btnAttachPhoto.on('click', event => {
             
             this.el.inputPhoto.click()
@@ -492,7 +497,34 @@ export class WhatsAppController{
         })
         
         this.el.btnSendDocument.on('click', event => {
-            console.log('sending document...')
+
+            this.el.btnSendDocument.css({
+                display: "none"
+            })
+            this.el.btnSendDocumentLoading.css({
+                display: "flex"
+            })
+
+            let file = this.el.inputDocument.files[0]
+
+            let imgPreviewFile = Base64.toFile(this.el.imgPanelDocumentPreview.src)
+
+            Message.sendDocument(this._selectedContact.chatId, this._user.email, file, this.el.infoPanelDocumentPreview.innerHTML.split(' ')[0], this.el.imgPanelDocumentPreview.src).then(data => {
+                Message.receiveMessage(data.chatId, data.messageId).then(() => {
+                    
+                }).catch(error => console.log(error))
+                this.el.btnSendDocumentLoading.css({
+                    display: "none"
+                })
+                this.el.btnSendDocument.css({
+                    display: "flex"
+                })
+                this.el.btnClosePanelDocumentPreview.click()
+            }).catch(error => {
+                this.el.btnSendDocumentLoading.hide()
+                this.el.btnSendDocument.show()
+                console.log(error)
+            })
         })
 
         this.el.btnSendPicture.on('click', () => {
@@ -513,19 +545,8 @@ export class WhatsAppController{
             ctx.scale(-1, 1)
 
             ctx.drawImage(image, 0, 0, canvas.width*-1, canvas.height)
- 
-            let arr = canvas.toDataURL().split(',')
-            let type = arr[0].match(/:(.*?);/)[1]
-            let bstr = atob(arr[1])
-            let n = bstr.length
-            let u8arr = new Uint8Array(n)
-                
-            while(n--){
-                u8arr[n] = bstr.charCodeAt(n);
-            }
 
-            
-            let imgFile =  new File([u8arr], `camera.${type.split('/')[1]}`, {type})
+            let imgFile = Base64.toFile(canvas.toDataURL(), `${Date.now()}_camera`)
 
             Message.sendPicture(this._selectedContact.chatId, this._user.email, "image", imgFile).then(data => {
                 Message.receiveMessage(data.chatId, data.messageId).then(() => {}).catch(error => console.log(error))

@@ -48,10 +48,40 @@ export class Message extends Model{
         return this._data
     }
 
-    getImageView(me = true){
+    get pages(){
+        return this._data.pages
+    }
+
+    get filename(){
+        return this._data.filename
+    }
+
+    get size(){
+        return this._data.size
+    }
+
+    get documentType(){
+        return this._data.documentType
+    }
+
+    get imgPreviewFile(){
+        return this._data.imgPreviewFile
+    }
+
+    getMessageView(me = true){
         let message = document.createElement('div')
 
         message.classList.add('message')
+
+        let documentPages = null
+        let documentType = null
+        let mb = null
+
+        if(this.type == 'document'){
+            documentPages = this.pages > 1 ? `${this.pages} páginas` : `${this.pages} página`
+            documentType = this.documentType.split('/')[1].toUpperCase()
+            mb = (this.size / 1000000).toFixed(2)
+        }
 
         switch(this.type){
             case 'contact':
@@ -105,13 +135,13 @@ export class Message extends Model{
                     <div class="_3_7SH _1ZPgd ">
                         <div class="_1fnMt _2CORf">
                             <a class="_1vKRe" href="#">
-                                <div class="_2jTyA" style="background-image: url()"></div>
+                                <div class="_2jTyA" id="document-preview-img" style="background-image: url(${this.imgPreviewFile})"></div>
                                 <div class="_12xX7">
                                     <div class="_3eW69">
                                         <div class="JdzFp message-file-icon icon-doc-pdf"></div>
                                     </div>
                                     <div class="nxILt">
-                                        <span dir="auto" class="message-filename">Arquivo.pdf</span>
+                                        <span dir="auto" class="message-filename">${this.filename}</span>
                                     </div>
                                     <div class="_17viz">
                                         <span data-icon="audio-download" class="message-file-download">
@@ -129,20 +159,13 @@ export class Message extends Model{
                                 </div>
                             </a>
                             <div class="_3cMIj">
-                                <span class="PyPig message-file-info">32 páginas</span>
-                                <span class="PyPig message-file-type">PDF</span>
-                                <span class="PyPig message-file-size">4 MB</span>
+                                <span class="PyPig message-file-info">${documentPages}</span>
+                                <span class="PyPig message-file-type">${documentType}</span>
+                                <span class="PyPig message-file-size">${mb} MB</span>
                             </div>
                             <div class="_3Lj_s">
                                 <div class="_1DZAH" role="button">
-                                    <span class="message-time">18:56</span>
-                                    <div class="message-status">
-                                        <span data-icon="msg-time">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 15" width="16" height="15">
-                                                <path fill="#859479" d="M9.75 7.713H8.244V5.359a.5.5 0 0 0-.5-.5H7.65a.5.5 0 0 0-.5.5v2.947a.5.5 0 0 0 .5.5h.094l.003-.001.003.002h2a.5.5 0 0 0 .5-.5v-.094a.5.5 0 0 0-.5-.5zm0-5.263h-3.5c-1.82 0-3.3 1.48-3.3 3.3v3.5c0 1.82 1.48 3.3 3.3 3.3h3.5c1.82 0 3.3-1.48 3.3-3.3v-3.5c0-1.82-1.48-3.3-3.3-3.3zm2 6.8a2 2 0 0 1-2 2h-3.5a2 2 0 0 1-2-2v-3.5a2 2 0 0 1 2-2h3.5a2 2 0 0 1 2 2v3.5z"></path>
-                                            </svg>
-                                        </span>
-                                    </div>
+                                    <span class="message-time">${Format.timeStampToTime(this.timeStamp)}</span>
                                 </div>
                             </div>
                         </div>
@@ -321,6 +344,13 @@ export class Message extends Model{
 
         message.firstElementChild.classList.add(messageTypeClass)
 
+        if(this.type == 'document'){
+            message.querySelector('a').addEventListener('click', event => {
+                event.preventDefault()
+                window.open(this.content, '_blank');
+            })
+        }
+
         return message
     }
 
@@ -381,6 +411,28 @@ export class Message extends Model{
         return status
     }
 
+    static sendDocument(chatId, from, file, pages, imgPreviewFile){
+        return new Promise((resolve, reject) => {
+
+            let storagedFile = Firebase.hd().ref(from).child(`${Date.now()}_${file.name}`).put(file)
+
+            storagedFile.on('state_changed', () => {
+
+            }, error => {
+                reject(error)
+            }, () => {
+                storagedFile.snapshot.ref.getDownloadURL().then(downloadURL => {
+
+                    Message.send(chatId, downloadURL, from, 'document', file.size, file.name, pages, file.type, imgPreviewFile).then(resp => {
+                        resolve(resp)
+                    }).catch(error => {
+                        reject(error)
+                    })
+                })
+            })
+        })
+    }
+
     static sendPicture(chatId, from, type, file){
 
         return new Promise((resolve, reject) => {
@@ -408,34 +460,68 @@ export class Message extends Model{
 
     }
 
-    static send(chatId, content, from, type){
+    static send(chatId, content, from, type, size = null, filename = null, pages = null, documentType = null, imgPreviewFile = null){
 
         return new Promise((resolve, reject) => {
 
-            Message.getRef(chatId).add({
-                content,
-                from,
-                status: 'wait',
-                timeStamp: new Date(),
-                type
-            }).then(resp => {
+            if(type == 'document'){
 
-                let messageId = resp.id
-
-                resp.parent.doc(messageId).set({
-                    status: 'sent'
-                }, {
-                    merge: true
-                }).then(() => {
-                    resolve({chatId, messageId})
+                Message.getRef(chatId).add({
+                    content,
+                    from,
+                    status: 'wait',
+                    timeStamp: new Date(),
+                    type,
+                    size,
+                    filename,
+                    pages,
+                    documentType,
+                    imgPreviewFile
+                }).then(resp => {
+    
+                    let messageId = resp.id
+    
+                    resp.parent.doc(messageId).set({
+                        status: 'sent'
+                    }, {
+                        merge: true
+                    }).then(() => {
+                        resolve({chatId, messageId})
+                    }).catch(error => {
+                        reject(error)
+                    })
+    
                 }).catch(error => {
                     reject(error)
                 })
 
-            }).catch(error => {
-                reject(error)
-            })
+            }else{
 
+                Message.getRef(chatId).add({
+                    content,
+                    from,
+                    status: 'wait',
+                    timeStamp: new Date(),
+                    type
+                }).then(resp => {
+    
+                    let messageId = resp.id
+    
+                    resp.parent.doc(messageId).set({
+                        status: 'sent'
+                    }, {
+                        merge: true
+                    }).then(() => {
+                        resolve({chatId, messageId})
+                    }).catch(error => {
+                        reject(error)
+                    })
+    
+                }).catch(error => {
+                    reject(error)
+                })
+
+            }
         })
 
     }

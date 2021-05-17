@@ -16198,3 +16198,12 @@ html[dir=rtl] ._2ICcy:after{
     width: fit-content;
     height: fit-content;
 }
+
+#document-preview-img{
+    background-size: 100% 100%;
+}
+
+#btn-send-document-loading{
+    display: none;
+    overflow: hidden;
+}

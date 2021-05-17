@@ -73,15 +73,18 @@ export class Message extends Model{
 
         message.classList.add('message')
 
-        let documentPages = null
-        let documentType = null
-        let mb = null
+        let documentPages = ""
+        let documentType = ""
+        let mb = ""
 
-        if(this.type == 'document'){
+        if(this.type == 'document' && this.documentType.split("/")[1].toLowerCase() == 'pdf'){
             documentPages = this.pages > 1 ? `${this.pages} páginas` : `${this.pages} página`
-            documentType = this.documentType.split('/')[1].toUpperCase()
-            mb = (this.size / 1000000).toFixed(2)
         }
+
+        documentType = this.documentType.split('/')[1].toUpperCase()
+        mb = (this.size / 1000000).toFixed(2)
+
+        let formattedDocumentType = this.documentType.split('/')[1].replace('.','-')
 
         switch(this.type){
             case 'contact':
@@ -138,7 +141,7 @@ export class Message extends Model{
                                 <div class="_2jTyA" id="document-preview-img" style="background-image: url(${this.imgPreviewFile})"></div>
                                 <div class="_12xX7">
                                     <div class="_3eW69">
-                                        <div class="JdzFp message-file-icon icon-doc-pdf"></div>
+                                        <div class="JdzFp message-file-icon icon-doc-${formattedDocumentType}"></div>
                                     </div>
                                     <div class="nxILt">
                                         <span dir="auto" class="message-filename">${this.filename}</span>

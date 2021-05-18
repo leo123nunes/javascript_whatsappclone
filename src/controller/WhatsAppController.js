@@ -12,6 +12,8 @@ export class WhatsAppController{
 
     constructor(){
 
+        this.x = 0;
+
         this._firebase = new Firebase()
 
         this.initAuth()
@@ -463,28 +465,36 @@ export class WhatsAppController{
 
             this.el.inputDocument.click()
 
-            this.el.inputDocument.on('change', event => {
+            this.el.inputDocument.onchange = () => {
+
                 this._documentPreview = new DocumentPreviewController(this.el.inputDocument.files[0])
 
                 this.el.panelDocumentPreview.addClass('open')
                 this.el.panelDocumentPreview.show()
 
                 this._documentPreview.getFilePreview().then(data => {
+
+                    let formattedDocumentType = data.type.split('/')[1].replace('.','-')
+
                     this.el.filePanelDocumentPreview.show()
                     this.el.infoPanelDocumentPreview.innerHTML = data.fileName
                     this.el.imgPanelDocumentPreview.src = data.src
+                    this.el.filePanelDocumentPreview.show()
+                    this.el.filenamePanelDocumentPreview.innerHTML = data.fileName
+                    this.el.iconPanelDocumentPreview.classList = `jcxhw icon-doc-${formattedDocumentType}`
+                    this.el.imagePanelDocumentPreview.hide()
 
                     switch(data.type){
                         case "application/pdf":
                             this.el.filePanelDocumentPreview.hide()
                             this.el.imagePanelDocumentPreview.show()
                         break;
-                    }
+                    }          
 
                 }).catch(error => {
                     console.log(error)
                 })
-            })
+            }
         })
 
         this.el.btnClosePanelDocumentPreview.on('click', event => {

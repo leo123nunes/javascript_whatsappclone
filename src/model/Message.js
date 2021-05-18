@@ -76,9 +76,18 @@ export class Message extends Model{
         let documentPages = ""
         let documentType = ""
         let mb = ""
+        let isPdfFile = false
+        let pdfFilePreview = ""
 
         if(this.type == 'document' && this.documentType.split("/")[1].toLowerCase() == 'pdf'){
             documentPages = this.pages > 1 ? `${this.pages} páginas` : `${this.pages} página`
+            isPdfFile = true
+        }
+
+        if(isPdfFile){
+            pdfFilePreview = "flex"
+        }else{
+            pdfFilePreview = "none"
         }
 
         documentType = this.documentType.split('/')[1].toUpperCase()
@@ -138,7 +147,7 @@ export class Message extends Model{
                     <div class="_3_7SH _1ZPgd ">
                         <div class="_1fnMt _2CORf">
                             <a class="_1vKRe" href="#">
-                                <div class="_2jTyA" id="document-preview-img" style="background-image: url(${this.imgPreviewFile})"></div>
+                                <div class="_2jTyA" id="document-preview-img" style="background-image: url(${this.imgPreviewFile}); display: ${pdfFilePreview};"></div>
                                 <div class="_12xX7">
                                     <div class="_3eW69">
                                         <div class="JdzFp message-file-icon icon-doc-${formattedDocumentType}"></div>

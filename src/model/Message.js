@@ -73,28 +73,6 @@ export class Message extends Model{
 
         message.classList.add('message')
 
-        let documentPages = ""
-        let documentType = ""
-        let mb = ""
-        let isPdfFile = false
-        let pdfFilePreview = ""
-
-        if(this.type == 'document' && this.documentType.split("/")[1].toLowerCase() == 'pdf'){
-            documentPages = this.pages > 1 ? `${this.pages} páginas` : `${this.pages} página`
-            isPdfFile = true
-        }
-
-        if(isPdfFile){
-            pdfFilePreview = "flex"
-        }else{
-            pdfFilePreview = "none"
-        }
-
-        documentType = this.documentType.split('/')[1].toUpperCase()
-        mb = (this.size / 1000000).toFixed(2)
-
-        let formattedDocumentType = this.documentType.split('/')[1].replace('.','-')
-
         switch(this.type){
             case 'contact':
                 message.innerHTML = `
@@ -119,7 +97,7 @@ export class Message extends Model{
                                     </div>
                                 </div>
                                 <div class="_1lC8v">
-                                    <div dir="ltr" class="_3gkvk selectable-text invisible-space copyable-text">Nome do Contato Anexado</div>
+                                    <div dir="ltr" class="_3gkvk selectable-text invisible-space copyable-text">${this.content.name}</div>
                                 </div>
                                 <div class="_3a5-b">
                                     <div class="_1DZAH" role="button">
@@ -140,9 +118,44 @@ export class Message extends Model{
 
                     </div>
                     `
+
+                if(this.content.photo){
+                    let img = message.querySelector('img')
+                    img.src = this.content.photo
+                    img.show()
+                }
+
+                message.querySelector('.btn-message-send').on('click', event => {
+                    this.trigger('sendmessagecontact', this.content)
+                })
+
             break;
 
             case 'document':
+
+                let documentPages = ""
+                let documentType = ""
+                let mb = ""
+                let isPdfFile = false
+                let pdfFilePreview = ""
+
+                if(this.type == 'document' && this.documentType.split("/")[1].toLowerCase() == 'pdf'){
+                    documentPages = this.pages > 1 ? `${this.pages} páginas` : `${this.pages} página`
+                    isPdfFile = true
+                }
+        
+                if(isPdfFile){
+                    pdfFilePreview = "flex"
+                }else{
+                    pdfFilePreview = "none"
+                }
+
+                let formattedDocumentType = this.documentType.split('/')[1].replace('.','-')
+
+                documentType = this.documentType.split('/')[1].toUpperCase()
+
+                mb = (this.size / 1000000).toFixed(2)
+
                 message.innerHTML = `
                     <div class="_3_7SH _1ZPgd ">
                         <div class="_1fnMt _2CORf">

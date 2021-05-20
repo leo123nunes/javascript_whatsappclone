@@ -7,6 +7,7 @@ import { User } from '../model/User'
 import { Chat } from '../model/Chat'
 import { Message } from '../model/Message'
 import { Base64 } from '../util/base64'
+import { ContactController } from '../controller/ContactController'
 
 export class WhatsAppController{
 
@@ -68,7 +69,7 @@ export class WhatsAppController{
 
     initContacts(){
 
-        this._user.loadContacts()
+        this._user.loadContacts().then(() => {}).catch(() => {})
 
         this._user.on('contactschange', docs => {
             this.el.contactsMessagesList.innerHTML = ''
@@ -78,6 +79,8 @@ export class WhatsAppController{
                 let div = document.createElement('div')
 
                 div.addClass('contact-item')
+
+                div.setAttribute('id', `_${doc.chatId}`)
 
                 div.innerHTML = `
                     <div class="dIyEr">
@@ -139,13 +142,13 @@ export class WhatsAppController{
 
                     div.on('click', () => {
 
+                        this.selectContact(doc)
+
                         if(this._selectedContact){
                             Message.getRef(this._selectedContact.chatId).onSnapshot(() => {})
                         }
 
                         this.el.panelMessagesContainer.innerHTML = ''
-                        
-                        this.selectContact(doc)
 
                         this._selectedContact = doc
 
@@ -174,6 +177,33 @@ export class WhatsAppController{
                                     let view = message.getMessageView(me)
 
                                     this.el.panelMessagesContainer.appendChild(view)
+
+                                })
+
+                                message.on('sendmessagecontact', contact => {
+
+                                    Chat.createIfNotExists(this._user.email, contact.email).then(chatId => {
+
+                                        this._user.addContact({chatId, email: contact.email, name: contact.name, photo: contact.photo}).then(() => {
+                                            let newUser = new User(contact.email)
+
+                                            newUser.on('datachange', () => {
+                                                newUser.addContact({email: this._user.email, photo: this._user.photo, name: this._user.name, chatId}).then(() => {
+                                                    this.selectContact(newUser)
+
+                                                    document.querySelector(`#_${chatId}`).click()
+                                                }).catch(error => {
+                                                    console.log(error)
+                                                })
+                                            })
+
+                                        }).catch(error => {
+                                            console.log(error)
+                                        })
+
+                                    }).catch(error => {
+                                        console.log(error)
+                                    })
 
                                 })
 
@@ -359,7 +389,7 @@ export class WhatsAppController{
                         })
 
                     }).catch(error => {
-                        console.log(`error creating new chat: ${error}`)
+                        console.log(error)
                     })
 
                 }).catch(error => {
@@ -501,10 +531,6 @@ export class WhatsAppController{
             this.closeAllPanels()
             this.el.panelMessagesContainer.show()
         })
-
-        this.el.btnAttachContact.on('click', event => {
-            console.log('contact')
-        })
         
         this.el.btnSendDocument.on('click', event => {
 
@@ -571,7 +597,16 @@ export class WhatsAppController{
         })
 
         this.el.btnAttachContact.on('click', event => {
+
+            this._contactController = new ContactController(this._user, this._selectedContact.chatId, this.el.modalContacts)
+
             this.el.modalContacts.show()
+
+            this._contactController.on('selectcontact', contact => {
+                Message.send(this._selectedContact.chatId, contact, this._user.email, 'contact').then(resp => {
+                })
+                this.el.modalContacts.hide()
+            })
         })
 
         this.el.btnCloseModalContacts.on('click', event => {

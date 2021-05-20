@@ -72,11 +72,11 @@ export class User extends Model{
                     })
 
                 }).catch(error => {
-                    console.log('error creating new user: ', error)
+                    console.log(error)
                 })
 
             }else if(!data.data() && !this._data.name){
-                console.log(`user not found: ${data.data()}`)
+                console.log(`erro ao adicionar um novo usuario`)
             }else{
 
                 User.getRef().doc(id).onSnapshot(newData => {
@@ -128,7 +128,13 @@ export class User extends Model{
 
     addContact(contact){
 
-        return User.getContactsRef(this.email).doc(btoa(contact.email)).set(contact)
+        if(contact.email == this.email){
+            return new Promise((resolve, reject) => {
+                reject('voce nao pode se adicionar')
+            })
+        }else{
+            return User.getContactsRef(this.email).doc(btoa(contact.email)).set(contact)
+        }
 
     }
 

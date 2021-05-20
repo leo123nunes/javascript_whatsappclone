@@ -65,7 +65,6 @@ export class Chat extends Model{
                     Chat.create(meEmail, contactEmail).then(resp => {
                         resolve(resp)
                     }).catch(error => {
-                        console.log('error creating chat')
                         reject(error)
                     })
 

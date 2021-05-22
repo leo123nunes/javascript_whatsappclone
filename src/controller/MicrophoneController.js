@@ -58,12 +58,15 @@ export class MicrophoneController extends ClassEvents{
 
                 fileReader.onload = () => {
 
-                    let audio = new Audio(fileReader.result)
+                    let audio = new AudioContext()
 
-                    audio.play()
+                    audio.decodeAudioData(fileReader.result).then(metadata => {
+
+                        this.trigger('recorded', file, metadata)
+                    })
                 }
 
-                fileReader.readAsDataURL(file)
+                fileReader.readAsArrayBuffer(blob)
             })
 
             this._mediaRecorder.start()

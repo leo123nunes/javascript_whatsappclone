@@ -68,6 +68,14 @@ export class Message extends Model{
         return this._data.imgPreviewFile
     }
 
+    get photo(){
+        return this._data.photo
+    }
+
+    get duration(){
+        return this._data.duration
+    }
+
     getMessageView(me = true){
         let message = document.createElement('div')
 
@@ -244,23 +252,23 @@ export class Message extends Model{
 
             case 'audio':
                 message.innerHTML = `
-                    <div class="_3_7SH _17oKL">
+                    <div class="_3_7SH _17oKL" id=${this.id}>
                         <div class="_2N_Df LKbsn">
                             <div class="_2jfIu">
                                 <div class="_2cfqh">
                                     <div class="_1QMEq _1kZiz fS1bA">
                                         <div class="E5U9C">
-                                            <svg class="_1UDDE" width="34" height="34" viewBox="0 0 43 43">
+                                            <svg class="_1UDDE audio-loading" width="34" height="34" viewBox="0 0 43 43">
                                                 <circle class="_3GbTq _37WZ9" cx="21.5" cy="21.5" r="20" fill="none" stroke-width="3"></circle>
                                             </svg>
-                                            <button class="_2pQE3" style="display:none">
+                                            <button class="_2pQE3 audio-play" style="display:none">
                                                 <span data-icon="audio-play">
                                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 34 34" width="34" height="34">
                                                         <path fill="#263238" fill-opacity=".5" d="M8.5 8.7c0-1.7 1.2-2.4 2.6-1.5l14.4 8.3c1.4.8 1.4 2.2 0 3l-14.4 8.3c-1.4.8-2.6.2-2.6-1.5V8.7z"></path>
                                                     </svg>
                                                 </span>
                                             </button>
-                                            <button class="_2pQE3">
+                                            <button class="_2pQE3 audio-pause" style="display:none">
                                                 <span data-icon="audio-pause">
                                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 34 34" width="34" height="34">
                                                         <path fill="#263238" fill-opacity=".5" d="M9.2 25c0 .5.4 1 .9 1h3.6c.5 0 .9-.4.9-1V9c0-.5-.4-.9-.9-.9h-3.6c-.4-.1-.9.3-.9.9v16zm11-17c-.5 0-1 .4-1 .9V25c0 .5.4 1 1 1h3.6c.5 0 1-.4 1-1V9c0-.5-.4-.9-1-.9 0-.1-3.6-.1-3.6-.1z"></path>
@@ -269,11 +277,11 @@ export class Message extends Model{
                                             </button>
                                         </div>
                                         <div class="_1_Gu6">
-                                            <div class="message-audio-duration">0:05</div>
+                                            <div class="message-audio-duration">${Format.getTimeFromMilliseconds(this.duration * 1000)}</div>
                                             <div class="_1sLSi">
                                                 <span class="nDKsM" style="width: 0%;"></span>
                                                 <input type="range" min="0" max="100" class="_3geJ8" value="0">
-                                                <audio src="#" preload="auto"></audio>
+                                                <audio src="${this.content}" preload="auto"></audio>
                                             </div>
                                         </div>
                                     </div>
@@ -306,14 +314,7 @@ export class Message extends Model{
                             </div>
                             <div class="_27K_5">
                                 <div class="_1DZAH" role="button">
-                                    <span class="message-time">17:48</span>
-                                    <div class="message-status">
-                                        <span data-icon="msg-dblcheck-ack">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 15" width="16" height="15">
-                                                <path fill="#4FC3F7" d="M15.01 3.316l-.478-.372a.365.365 0 0 0-.51.063L8.666 9.879a.32.32 0 0 1-.484.033l-.358-.325a.319.319 0 0 0-.484.032l-.378.483a.418.418 0 0 0 .036.541l1.32 1.266c.143.14.361.125.484-.033l6.272-8.048a.366.366 0 0 0-.064-.512zm-4.1 0l-.478-.372a.365.365 0 0 0-.51.063L4.566 9.879a.32.32 0 0 1-.484.033L1.891 7.769a.366.366 0 0 0-.515.006l-.423.433a.364.364 0 0 0 .006.514l3.258 3.185c.143.14.361.125.484-.033l6.272-8.048a.365.365 0 0 0-.063-.51z"></path>
-                                            </svg>
-                                        </span>
-                                    </div>
+                                    <span class="message-time">${Format.timeStampToTime(this.timeStamp)}</span>
                                 </div>
                             </div>
                         </div>
@@ -327,6 +328,53 @@ export class Message extends Model{
                         </div>
                     </div>
                     `
+
+                    if(this.photo){
+                        let img = message.querySelector('img')
+                        img.src = this.photo
+                        img.show()
+                    }
+
+                    let audioTimeline = message.querySelector("[type='range']")
+                    let audio = message.querySelector('audio')
+                    let audioDuration = this.duration
+                    let btnPlay = message.querySelector('.audio-play')
+                    let btnPause = message.querySelector('.audio-pause')
+                    let audioCurrentTime = message.querySelector('.message-audio-duration')
+
+                    audio.onloadeddata = e => {
+                        message.querySelector('.audio-loading').hide()
+                        message.querySelector('.audio-play').show()
+                    }
+
+                    audio.on('timeupdate', () => {
+                        audioTimeline.value = (100 * audio.currentTime) / audioDuration
+                        audioCurrentTime.innerHTML = Format.getTimeFromMilliseconds(audio.currentTime * 1000)
+                    })
+
+                    audio.onended = e => {
+                        btnPause.hide()
+                        btnPlay.show()
+                        audioTimeline.value = 0
+                        audioCurrentTime.innerHTML = Format.getTimeFromMilliseconds(audioDuration * 1000)
+                    }
+
+                    btnPlay.on('click', e => {
+                        audio.play()
+                        btnPlay.hide()
+                        btnPause.show()
+                    })
+
+
+                    btnPause.on('click', e => {
+                        audio.pause()
+                        btnPause.hide()
+                        btnPlay.show()
+                    })
+
+                    audioTimeline.onchange = () => {
+                        audio.currentTime = (audioDuration * audioTimeline.value) / 100
+                    }
             break;
 
             default:
@@ -436,6 +484,28 @@ export class Message extends Model{
         return status
     }
 
+    static sendAudio(chatId, from, audio, metadata, photo){
+
+        return new Promise((resolve, reject ) => {
+            let storagedFile = Firebase.hd().ref(from).child(`${Date.now()}_${audio.name}`).put(audio)
+
+            storagedFile.on('state_changed', () => {
+
+            }, error => {
+                console.log(error)
+            }, () => {
+                storagedFile.snapshot.ref.getDownloadURL().then(downloadURL => {
+
+                    Message.send(chatId, downloadURL, from, 'audio', audio.size, audio.filename, null, null, null, photo, metadata).then(resp => {
+                        resolve(resp)
+                    }).catch(error => {
+                        reject(error)
+                    })
+                })
+            })
+        })
+    }
+
     static sendDocument(chatId, from, file, pages, imgPreviewFile){
         return new Promise((resolve, reject) => {
 
@@ -485,7 +555,7 @@ export class Message extends Model{
 
     }
 
-    static send(chatId, content, from, type, size = null, filename = null, pages = null, documentType = null, imgPreviewFile = null){
+    static send(chatId, content, from, type, size = null, filename = null, pages = null, documentType = null, imgPreviewFile = null, photo = null, metadata = null){
 
         return new Promise((resolve, reject) => {
 
@@ -520,8 +590,35 @@ export class Message extends Model{
                     reject(error)
                 })
 
-            }else{
+            }else if(type == 'audio'){
 
+                Message.getRef(chatId).add({
+                    content,
+                    from,
+                    status: 'wait',
+                    timeStamp: new Date(),
+                    type,
+                    photo,
+                    duration: metadata.duration
+                }).then(resp => {
+    
+                    let messageId = resp.id
+    
+                    resp.parent.doc(messageId).set({
+                        status: 'sent'
+                    }, {
+                        merge: true
+                    }).then(() => {
+                        resolve({chatId, messageId})
+                    }).catch(error => {
+                        reject(error)
+                    })
+    
+                }).catch(error => {
+                    reject(error)
+                })
+
+            }else{
                 Message.getRef(chatId).add({
                     content,
                     from,
@@ -545,7 +642,6 @@ export class Message extends Model{
                 }).catch(error => {
                     reject(error)
                 })
-
             }
         })
 

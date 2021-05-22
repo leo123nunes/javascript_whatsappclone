@@ -638,6 +638,16 @@ export class WhatsAppController{
                 this.el.recordMicrophoneTimer.innerHTML = "00:00:00"
             })
 
+            this._microphone.on('recorded', (audio, metadata) => {
+                Message.sendAudio(this._selectedContact.chatId, this._user.email, audio, metadata, this._user.photo).then(data => {
+                    Message.receiveMessage(data.chatId, data.messageId).then(() => {
+                    
+                    }).catch(error => console.log(error))
+                }).catch(error => {
+                    console.log(error)
+                })
+            })
+
         })
 
         this.el.btnCancelMicrophone.on('click', event => {

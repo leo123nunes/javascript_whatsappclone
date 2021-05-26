@@ -189,4 +189,93 @@ export class User extends Model{
  
     }
 
+    searchContacts(filter = ''){
+
+        if(filter == ''){
+
+            return new Promise((success, failure) => {
+    
+                User.getContactsRef(this.email).onSnapshot(contactUsers => {
+
+                    User.getContactsRef(this.email).onSnapshot(() => {})
+
+                    var notUpdatedContactUsers = []
+
+                    if(contactUsers.empty){
+                        failure("No users found.")
+                    }
+
+                    contactUsers.forEach(contactUser => {
+                                    
+                        notUpdatedContactUsers.push(contactUser.data())                        
+                    })
+
+                    var updatedContactUsers = []
+
+                    User.getRef().onSnapshot(users => {
+
+                        User.getRef().onSnapshot(() => {})
+
+                        let promises = []
+
+                        users.forEach(user => {
+                            notUpdatedContactUsers.forEach(oldUser => {
+                                if(oldUser.email == user.data().email){
+                                    updatedContactUsers.push(user.data())
+
+                                    promises.push(new Promise((resolve, reject) => {
+
+                                        User.getRef().doc(this.email).collection('contacts').doc(btoa(user.data().email)).set({
+                                            name: user.data().name,
+                                            photo: user.data().photo,
+                                            email: user.data().email
+                                        },{
+                                            merge: true
+                                        }).then(resp => {
+                                            resolve()
+                                        }).catch(error => {
+                                            reject()
+                                        })
+
+                                    }))
+
+                                }
+                            })
+                        })
+
+                        Promise.all(promises).then(resp => {
+                            this.trigger('contactschange', updatedContactUsers)
+        
+                            success(updatedContactUsers)
+                        })
+                    })
+                })
+            })
+
+        }else{
+
+            return new Promise((success, failure) => {
+    
+                User.getContactsRef(this.email).where('name', '==', filter).onSnapshot(docs => {
+    
+                    if(docs.empty){
+                        failure("No users found.")
+                    }
+    
+                    var data = []  
+    
+                    docs.forEach(doc => {
+        
+                        data.push(doc.data())
+                    })
+    
+                    this.trigger('contactschange', data)
+    
+                    success(docs)
+                })
+            })
+        }
+ 
+    }
+
 }

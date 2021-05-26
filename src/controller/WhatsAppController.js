@@ -8,6 +8,7 @@ import { Chat } from '../model/Chat'
 import { Message } from '../model/Message'
 import { Base64 } from '../util/base64'
 import { ContactController } from '../controller/ContactController'
+import { Upload } from '../util/Upload'
 
 export class WhatsAppController{
 
@@ -69,7 +70,9 @@ export class WhatsAppController{
 
     initContacts(){
 
-        this._user.loadContacts().then(() => {}).catch(() => {})
+        this._user.loadContacts().then(() => {}).catch(error => {
+            console.log(error)
+        })
 
         this._user.on('contactschange', docs => {
             this.el.contactsMessagesList.innerHTML = ''
@@ -293,7 +296,7 @@ export class WhatsAppController{
                 this.el.searchconversationPlaceholder.show()
             }
 
-            this._user.loadContacts(this.el.searchconversationContact.value).then(() => {})
+            this._user.searchContacts(this.el.searchconversationContact.value).then(() => {})
             .catch(msg => {
 
                 let noUsersFound = document.createElement('div')
@@ -339,6 +342,23 @@ export class WhatsAppController{
 
         this.el.photoContainerEditProfile.on('click', event => {
             this.el.inputProfilePhoto.click()
+
+            if(this.el.inputProfilePhoto.files.length > 0){
+
+                this.el.inputProfilePhoto.on('change', e => {
+
+                    Upload.send(this.el.inputProfilePhoto.files[0], this._user.email).then(downloadUrl => {
+                        this._user.photo = downloadUrl
+                        this._user.saveUserData().then(() => {
+                            this.el.btnClosePanelEditProfile.click()
+                        })
+                    }).catch(error => {
+                        console.log(error)
+                    })  
+                })  
+            }
+
+            
         })
 
         this.el.inputNamePanelEditProfile.on('keypress', event => {
@@ -358,6 +378,8 @@ export class WhatsAppController{
                 this.el.btnSavePanelEditProfile.disabled = false
 
                 alert('User data successfully updated.')
+
+                this.el.btnClosePanelEditProfile.click()
             }).catch(error => {
                 alert(error)
             })

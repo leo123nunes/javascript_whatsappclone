@@ -8,6 +8,7 @@ export class Format{
     }
 
     static getTimeFromMilliseconds(milliseconds){
+
         let second = milliseconds / 1000
         let minute = second / 60
         let hour = minute / 60

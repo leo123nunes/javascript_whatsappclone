@@ -86,7 +86,7 @@ export class User extends Model{
             }
 
         }).catch(error => {
-            reject(error)
+            console.log(error)
         })
         
     }

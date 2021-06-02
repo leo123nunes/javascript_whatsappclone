@@ -16224,3 +16224,7 @@ html[dir=rtl] ._2ICcy:after{
     display: none;
     overflow: hidden;
 }
+
+#panel-messages-container{
+    padding: 10px 0px;
+}

@@ -14,8 +14,6 @@ export class WhatsAppController{
 
     constructor(){
 
-        this.x = 0;
-
         this._firebase = new Firebase()
 
         this.initAuth()
@@ -26,6 +24,45 @@ export class WhatsAppController{
 
         this.initEvents()
 
+        this.requestNotification()
+
+    }
+
+    requestNotification(){
+
+        if(typeof Notification == 'function' && Notification.permission === 'default'){
+
+            this.el.alertNotificationPermission.show()
+
+            this.el.alertNotificationPermission.querySelector('.alert-message').on('click', event => {
+
+                Notification.requestPermission(() => {
+                    this.el.alertNotificationPermission.hide()
+                })
+
+            })
+        }
+    }
+
+    showNotification(content){
+
+        if(Notification.permission === 'granted' && !document.hasFocus()){
+
+            let notification = new Notification(this._selectedContact.name, {
+                icon: this._selectedContact.photo,
+                body: content
+            })
+
+            let audio = new Audio('../../audio/alert.mp3')
+
+            audio.currentTime = 0
+            audio.play()
+    
+            setTimeout(() => {
+                notification.close()
+            }, 3000)
+
+        }
     }
 
     initAuth(){
@@ -85,6 +122,14 @@ export class WhatsAppController{
 
                 div.setAttribute('id', `_${doc.chatId}`)
 
+                let lastMessageTime = ''
+                let lastMessage = ''
+
+                if(doc.lastMessageTime && doc.lastMessage){
+                    lastMessageTime = Format.timeStampToTime(doc.lastMessageTime)
+                    lastMessage = doc.lastMessage
+                }
+
                 div.innerHTML = `
                     <div class="dIyEr">
                         <div class="_1WliW" style="height: 49px; width: 49px;">
@@ -107,7 +152,7 @@ export class WhatsAppController{
                                 <span dir="auto" title="${doc.name}" class="_1wjpf">${doc.name}</span>
                             </div>
                             <div class="_3Bxar">
-                                <span class="_3T2VG">${doc.lastMessageTime}</span>
+                                <span class="_3T2VG">${lastMessageTime}</span>
                             </div>
                         </div>
                         <div class="_1AwDx">
@@ -122,7 +167,7 @@ export class WhatsAppController{
                                             </svg>
                                         </span>
                                     </div>
-                                    <span dir="ltr" class="_1wjpf _3NFp9">${doc.lastMessage}</span>
+                                    <span dir="ltr" class="_1wjpf _3NFp9">${lastMessage}</span>
                                     <div class="_3Bxar">
                                         <span>
                                             <div class="_15G96">
@@ -155,9 +200,12 @@ export class WhatsAppController{
 
                         this._selectedContact = doc
 
+                        var receivedMessages = []
+
                         Message.getRef(this._selectedContact.chatId)
                         .orderBy('timeStamp')
                         .onSnapshot(docs => {
+
                             this.el.panelMessagesContainer.innerHTML = ''
 
                             let autoScroll = this.el.panelMessagesContainer.scrollHeight > this.el.panelMessagesContainer.offsetHeight ? true : false
@@ -168,6 +216,13 @@ export class WhatsAppController{
                             docs.forEach(doc => {  
 
                                 var me = (doc.data().from == this._user.email) ? true : false
+
+                                let filter = receivedMessages.filter(id => id == doc.id)
+
+                                if(!me && filter.length == 0){
+                                    this.showNotification(doc.data().content)
+                                    receivedMessages.push(doc.id)
+                                }
 
                                 var message = new Message()
 
@@ -186,6 +241,11 @@ export class WhatsAppController{
                                 message.on('sendmessagecontact', contact => {
 
                                     Chat.createIfNotExists(this._user.email, contact.email).then(chatId => {
+
+                                        console.log(`creating snapshot, chatid: ${chatId}`)
+                                        Chat.getRef().doc(chatId).collection('messages').onSnapshot(resp => {
+                                            console.log('chat updated')
+                                        })
 
                                         this._user.addContact({chatId, email: contact.email, name: contact.name, photo: contact.photo}).then(() => {
                                             let newUser = new User(contact.email)
@@ -271,7 +331,7 @@ export class WhatsAppController{
         }
 
         this.el.activeName.innerHTML = doc.name
-        this.el.activeStatus.innerHTML = doc.status
+        this.el.activeStatus.innerHTML = ''
 
         this.el.main.css({
             display: "flex"

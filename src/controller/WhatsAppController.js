@@ -124,9 +124,19 @@ export class WhatsAppController{
 
                 let lastMessageTime = ''
                 let lastMessage = ''
+                let lastMessageFrom = ''
+                let lastMessageStatus = ''
+                let lastMessageType = ''
 
                 if(doc.lastMessageTime && doc.lastMessage){
                     lastMessageTime = Format.timeStampToTime(doc.lastMessageTime)
+                    Chat.getRef().doc(doc.chatId).collection('messages').orderBy('timeStamp').then(chat => {
+
+                        let lMessage= ''
+                        chat.doc().forEach(x => {
+                            lMessage = x
+                        })
+                    })
                     lastMessage = doc.lastMessage
                 }
 
@@ -152,7 +162,7 @@ export class WhatsAppController{
                                 <span dir="auto" title="${doc.name}" class="_1wjpf">${doc.name}</span>
                             </div>
                             <div class="_3Bxar">
-                                <span class="_3T2VG">${lastMessageTime}</span>
+                                <span class="_3T2VG" id="last-message-time">${lastMessageTime}</span>
                             </div>
                         </div>
                         <div class="_1AwDx">
@@ -160,14 +170,9 @@ export class WhatsAppController{
                                 <span title="digitando…" class="vdXUe _1wjpf typing" style="display:none">digitando…</span>
 
                                 <span class="_2_LEW last-message">
-                                    <div class="_1VfKB">
-                                        <span data-icon="status-dblcheck" class="">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" width="18" height="18">
-                                                <path fill="#263238" fill-opacity=".4" d="M17.394 5.035l-.57-.444a.434.434 0 0 0-.609.076l-6.39 8.198a.38.38 0 0 1-.577.039l-.427-.388a.381.381 0 0 0-.578.038l-.451.576a.497.497 0 0 0 .043.645l1.575 1.51a.38.38 0 0 0 .577-.039l7.483-9.602a.436.436 0 0 0-.076-.609zm-4.892 0l-.57-.444a.434.434 0 0 0-.609.076l-6.39 8.198a.38.38 0 0 1-.577.039l-2.614-2.556a.435.435 0 0 0-.614.007l-.505.516a.435.435 0 0 0 .007.614l3.887 3.8a.38.38 0 0 0 .577-.039l7.483-9.602a.435.435 0 0 0-.075-.609z"></path>
-                                            </svg>
-                                        </span>
+                                    <div class="_1VfKB" id="last-message-checker">
                                     </div>
-                                    <span dir="ltr" class="_1wjpf _3NFp9">${lastMessage}</span>
+                                    <span dir="ltr" class="_1wjpf _3NFp9" id="last-message">${lastMessage}</span>
                                     <div class="_3Bxar">
                                         <span>
                                             <div class="_15G96">
@@ -179,142 +184,204 @@ export class WhatsAppController{
                         </div>
                     </div>
                     `
+                Chat.getRef().doc(doc.chatId).collection('messages').orderBy('timeStamp').get().then(chat => {
 
-                    if(doc.photo){
+                    if(!chat.empty){
 
-                        let photo = div.querySelector('img')
+                        chat.docs.forEach(message => {
 
-                        photo.src = doc.photo
-                        photo.show()
+                            lastMessage = message.data().content
+                            lastMessageTime = message.data().timeStamp
+                            lastMessageFrom = message.data().from
+                            lastMessageStatus = message.data().status
+                            // lastMessageType = message.data().type
+
+
+                        })
+
+
+                        // if(lastMessageType == 'text'){
+                        //     div.querySelector('#last-message').innerHTML = lastMessage
+                        // }else if(lastMessageType == 'contact'){
+                        //     div.querySelector('#last-message').innerHTML = `Contact: ${lastMessage.name}`
+                        // }else{
+
+                        // }
+
+                        div.querySelector('#last-message').innerHTML = lastMessage
+
+                        div.querySelector('#last-message-time').innerHTML = Format.timeStampToTime(lastMessageTime)
+
+                        if(lastMessageFrom != this._user.email){
+                            div.querySelector('#last-message-checker').hide()
+                        }else{
+                            div.querySelector('#last-message-checker').show()
+                            let s = Message.sGetMessageStatusView(lastMessageStatus)
+                            div.querySelector('#last-message-checker').appendChild(s)
+                        }
+
+                    }
+                    
+                })
+
+                if(doc.photo){
+
+                    let photo = div.querySelector('img')
+
+                    photo.src = doc.photo
+                    photo.show()
+                }
+
+                div.on('click', () => {
+
+                    console.log(doc)
+
+                    this.selectContact(doc)
+
+                    if(this._selectedContact){
+                        Message.getRef(this._selectedContact.chatId).onSnapshot(() => {})
                     }
 
-                    div.on('click', () => {
+                    this.el.panelMessagesContainer.innerHTML = ''
 
-                        this.selectContact(doc)
+                    this._selectedContact = doc
 
-                        if(this._selectedContact){
-                            Message.getRef(this._selectedContact.chatId).onSnapshot(() => {})
-                        }
+                    var receivedMessages = []
+
+                    Message.getRef(this._selectedContact.chatId)
+                    .orderBy('timeStamp')
+                    .onSnapshot(docs => {
+
+                        div.querySelector('#last-message').innerHTML = ''
+                        div.querySelector('#last-message-time').innerHTML = ''
+                        div.querySelector('#last-message-checker').innerHTML = ''
 
                         this.el.panelMessagesContainer.innerHTML = ''
 
-                        this._selectedContact = doc
+                        let autoScroll = this.el.panelMessagesContainer.scrollHeight > this.el.panelMessagesContainer.offsetHeight ? true : false
+                        let scrollTopMax = this.el.panelMessagesContainer.scrollTopMax
+                        let scrollTop = this.el.panelMessagesContainer.scrollTop
+                        let scrollHeight = this.el.panelMessagesContainer.scrollHeight
 
-                        var receivedMessages = []
+                        docs.forEach(doc => { 
+                            let x = doc.data()
+                            // console.log(x)
 
-                        Message.getRef(this._selectedContact.chatId)
-                        .orderBy('timeStamp')
-                        .onSnapshot(docs => {
+                            lastMessage = doc.data().content
+                            lastMessageTime = doc.data().timeStamp
+                            lastMessageFrom = doc.data().from
+                            lastMessageStatus = doc.data().status
+                            // lastMessageType = doc.data().type
 
-                            this.el.panelMessagesContainer.innerHTML = ''
+                            var me = (doc.data().from == this._user.email) ? true : false
 
-                            let autoScroll = this.el.panelMessagesContainer.scrollHeight > this.el.panelMessagesContainer.offsetHeight ? true : false
-                            let scrollTopMax = this.el.panelMessagesContainer.scrollTopMax
-                            let scrollTop = this.el.panelMessagesContainer.scrollTop
-                            let scrollHeight = this.el.panelMessagesContainer.scrollHeight
+                            let filter = receivedMessages.filter(id => id == doc.id)
 
-                            docs.forEach(doc => {  
+                            if(!me && filter.length == 0){
+                                this.showNotification(doc.data().content)
+                                receivedMessages.push(doc.id)
+                            }
 
-                                var me = (doc.data().from == this._user.email) ? true : false
+                            var message = new Message()
 
-                                let filter = receivedMessages.filter(id => id == doc.id)
+                            var docData = doc.data()
 
-                                if(!me && filter.length == 0){
-                                    this.showNotification(doc.data().content)
-                                    receivedMessages.push(doc.id)
-                                }
+                            docData.id = `message${doc.id}`
 
-                                var message = new Message()
+                            message.on('datachange', () => {
 
-                                var docData = doc.data()
+                                let view = message.getMessageView(me)
 
-                                docData.id = `message${doc.id}`
+                                this.el.panelMessagesContainer.appendChild(view)
 
-                                message.on('datachange', () => {
+                            })
 
-                                    let view = message.getMessageView(me)
+                            message.on('sendmessagecontact', contact => {
 
-                                    this.el.panelMessagesContainer.appendChild(view)
+                                console.log('sending contact..')
 
-                                })
+                                Chat.createIfNotExists(this._user.email, contact.email).then(chatId => {
+                                    Chat.getRef().doc(chatId).collection('messages').onSnapshot(() => {
+                                    })
 
-                                message.on('sendmessagecontact', contact => {
+                                    this._user.addContact({chatId, email: contact.email, name: contact.name, photo: contact.photo}).then(() => {
+                                        let newUser = new User(contact.email)
 
-                                    Chat.createIfNotExists(this._user.email, contact.email).then(chatId => {
+                                        newUser.on('datachange', () => {
+                                            newUser.addContact({email: this._user.email, photo: this._user.photo, name: this._user.name, chatId}).then(() => {
+                                                this.selectContact(newUser)
 
-                                        console.log(`creating snapshot, chatid: ${chatId}`)
-                                        Chat.getRef().doc(chatId).collection('messages').onSnapshot(resp => {
-                                            console.log('chat updated')
-                                        })
-
-                                        this._user.addContact({chatId, email: contact.email, name: contact.name, photo: contact.photo}).then(() => {
-                                            let newUser = new User(contact.email)
-
-                                            newUser.on('datachange', () => {
-                                                newUser.addContact({email: this._user.email, photo: this._user.photo, name: this._user.name, chatId}).then(() => {
-                                                    this.selectContact(newUser)
-
-                                                    document.querySelector(`#_${chatId}`).click()
-                                                }).catch(error => {
-                                                    console.log(error)
-                                                })
+                                                document.querySelector(`#_${chatId}`).click()
+                                            }).catch(error => {
+                                                console.log(error)
                                             })
-
-                                        }).catch(error => {
-                                            console.log(error)
                                         })
 
                                     }).catch(error => {
                                         console.log(error)
                                     })
 
+                                }).catch(error => {
+                                    console.log(error)
                                 })
-
-                                if(!this.el.panelMessagesContainer.querySelector(`#message${doc.id}`)){
-
-                                    message.fromJson(docData)
-
-                                }else{
-                                    
-                                    if(me){
-
-                                        
-
-                                        this.el.panelMessagesContainer.querySelector(`#message${doc.id}`).parentElement.outerHTML = ''
-
-                                        message.fromJson(docData)
-
-                                    }
-
-                                }
-
-                                if(!me && docData['status'] == 'received'){
-                                        
-                                        Message.readMessage(this._selectedContact.chatId, doc.id).then(resp => {
-
-                                            docData['status'] == 'read'
-
-                                            message.status = 'read'
-
-                                            let oldStatus = this.el.panelMessagesContainer.querySelector(`#message${doc.id}`)
-
-                                        }).catch(error => {
-                                            console.log(error)
-                                        })
-                                }
 
                             })
 
-                            if((autoScroll && scrollTop >= scrollTopMax) || scrollHeight == this.el.panelMessagesContainer.offsetHeight){
-                                this.el.panelMessagesContainer.scrollTop = this.el.panelMessagesContainer.scrollTopMax
+                            if(!this.el.panelMessagesContainer.querySelector(`#message${doc.id}`)){
+
+                                message.fromJson(docData)
+
                             }else{
-                                this.el.panelMessagesContainer.scrollTop = scrollTop
+                                
+                                if(me){
+
+                                    
+
+                                    this.el.panelMessagesContainer.querySelector(`#message${doc.id}`).parentElement.outerHTML = ''
+
+                                    message.fromJson(docData)
+
+                                }
+
+                            }
+
+                            if(!me && docData['status'] == 'received'){
+                                    
+                                    Message.readMessage(this._selectedContact.chatId, doc.id).then(resp => {
+
+                                        docData['status'] == 'read'
+
+                                        message.status = 'read'
+
+                                    }).catch(error => {
+                                        console.log(error)
+                                    })
                             }
 
                         })
-                    })
 
-                    this.el.contactsMessagesList.appendChild(div)
+                        div.querySelector('#last-message').innerHTML = lastMessage
+
+                        div.querySelector('#last-message-time').innerHTML = Format.timeStampToTime(lastMessageTime)
+
+                        if(lastMessageFrom != this._user.email){
+                            div.querySelector('#last-message-checker').hide()
+                        }else{
+                            div.querySelector('#last-message-checker').show()
+                            let newStatus = Message.sGetMessageStatusView(lastMessageStatus)
+                            div.querySelector('#last-message-checker').appendChild(newStatus)
+                        }
+
+                        if((autoScroll && scrollTop >= scrollTopMax) || scrollHeight == this.el.panelMessagesContainer.offsetHeight){
+                            this.el.panelMessagesContainer.scrollTop = this.el.panelMessagesContainer.scrollTopMax + 20
+                        }else{
+                            this.el.panelMessagesContainer.scrollTop = scrollTop
+                        }
+
+                    })
+                })
+
+                this.el.contactsMessagesList.appendChild(div)
 
             })
         })
@@ -685,7 +752,16 @@ export class WhatsAppController{
             this.el.modalContacts.show()
 
             this._contactController.on('selectcontact', contact => {
-                Message.send(this._selectedContact.chatId, contact, this._user.email, 'contact').then(resp => {
+                Message.send(this._selectedContact.chatId, contact, this._user.email, 'contact').then(data => {
+                    console.log(data)
+                    Chat.getRef().doc(data.chatId).collection('messages').doc(data.messageId).set({
+                        status: 'received'
+                    },{
+                        merge: true
+                    }).then(() => {}).catch(error => console.log(error))
+                    // Message.receiveMessage(data.chatId, data.messageId).then(() => {
+                    
+                    // }).catch(error => console.log(error))
                 })
                 this.el.modalContacts.hide()
             })
